@@ -115,7 +115,8 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
         # utiliza o método da classe "Layer" para criação do perímetro formado pela saia
         skirt.make_perimeter()
 
-        linestrings_perLayer = []
+        perimeterPath_perLayer = []
+        infillPath_perLayer = []
 
         # loop que percorre todas as alturas na lista "heights". A função enumerate é usada para obter tanto o índice (i) quanto o valor (height) de cada altura.
         for i, height in enumerate(self.heights):
@@ -171,45 +172,51 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                 """
 
                 if i == 0:  # para a primeira camada
-                    # adiciona ao perímetro da primeira camada como deve ser o fluxo e a velocidade do raster
-                    layer.perimeter.append(
-                        Raster(path, self.process.first_layer_flow, self.process.speed))
+                    FlagFirstLayer = True
                     # --- Ignore the "Region" ---
-
                     # Merge the same layers LINESTRINGS
-
+                    
                     if j == len(layer.perimeter_paths.geoms)-1:
                         raw_list = RawList_Points(path, makeTuple=True)
 
                     else:
+                        # Delete all redundancy from regions (repeated coords.)
                         raw_list = RawList_Points(path, makeTuple=True)
+                        raw_list.pop()
 
-                    linestrings_perLayer.append(raw_list.copy())
 
-                    print(i, path)
-                    print(j, raw_list)
-
-                    print()
+                    perimeterPath_perLayer.append(raw_list.copy())
                     
-
                 else:  # para as demais camadas
-                    # adiciona ao perímetro da camada como deve ser o fluxo e a velocidade do raster
-                    layer.perimeter.append(
-                        Raster(path, self.process.flow, self.process.speed))
-                    
-                    # --- Ignore the "Region" ---
 
                     # Merge the same layers LINESTRINGS
-                    #linestring_buffer.append(RawList_Points(path))
-                    #linestring_buffer = linestring_buffer[:-2]
+                    if j == len(layer.perimeter_paths.geoms)-1:
+                        raw_list = RawList_Points(path, makeTuple=True)
 
-                    #print(i, path)
+                    else:
+                        # Delete all redundancy from regions (repeated coords.)
+                        raw_list = RawList_Points(path, makeTuple=True)
+                        raw_list.pop()
 
-                #print("-"*14)
-            # Return the Raw List of elements and pop the last (avoid redundancy)
-            
+
+                    perimeterPath_perLayer.append(raw_list.copy())
 
 
+            # Concatenates lists of tuples
+            finalPerimeterPath_perLayer = [coord for sublist in perimeterPath_perLayer for coord in sublist]
+            Linestring_perLayer = sp.LineString(finalPerimeterPath_perLayer)
+
+            # Apply to Raster (adiciona ao perímetro da primeira camada como deve ser o fluxo e a velocidade do raster)
+            if FlagFirstLayer == True: # First layer, adjust the flow
+                layer.perimeter.append(
+                            Raster(Linestring_perLayer, self.process.first_layer_flow, self.process.speed))
+                
+            else:
+                layer.perimeter.append(
+                            Raster(Linestring_perLayer, self.process.flow, self.process.speed))
+                
+            FlagFirstLayer = False
+            perimeterPath_perLayer = []
 
             # percorre cada caminho no preenchimento da camada. Se o caminho estiver dentro de uma região flexível, ele é dividido em um caminho flexível e um caminho de retração, que são adicionados ao preenchimento da camada. Se o caminho não estiver dentro de uma região flexível, ele é adicionado ao preenchimento da camada como está
             for path in infill_paths.geoms:
@@ -226,18 +233,53 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                 """
 
                 if i == 0:  # para a primeira camada
-                    # adiciona ao preenchimento da primeira camada como deve ser o fluxo e a velocidade do raster
-                    layer.infill.append(
-                        Raster(path, self.process.first_layer_flow, self.process.speed))
+                    FlagFirstLayer = True
+                    # --- Ignore the "Region" ---
+                    # Merge the same layers LINESTRINGS
+                    
+                    if j == len(layer.infill_paths.geoms)-1:
+                        raw_list = RawList_Points(path, makeTuple=True)
+
+                    else:
+                        # Delete all redundancy from regions (repeated coords.)
+                        raw_list = RawList_Points(path, makeTuple=True)
+                        raw_list.pop()
+
+
+                    infillPath_perLayer.append(raw_list.copy())
+
                 else:
-                    # adiciona ao preenchimento da camada como deve ser o fluxo e a velocidade do raster
-                    layer.infill.append(
-                        Raster(path, self.process.flow, self.process.speed))
+                    # Merge the same layers LINESTRINGS
+                    if j == len(layer.perimeter_paths.geoms)-1:
+                        raw_list = RawList_Points(path, makeTuple=True)
+
+                    else:
+                        # Delete all redundancy from regions (repeated coords.)
+                        raw_list = RawList_Points(path, makeTuple=True)
+                        raw_list.pop()
+
+
+                    infillPath_perLayer.append(raw_list.copy())
+
+
+            # Concatenates lists of tuples
+            finalInfillPath_perLayer = [coord for sublist in infillPath_perLayer for coord in sublist]
+            Linestring_perLayer = sp.LineString(finalInfillPath_perLayer)
+
+            # Apply to Raster (adiciona ao perímetro da primeira camada como deve ser o fluxo e a velocidade do raster)
+            if FlagFirstLayer == True: # First layer, adjust the flow
+                layer.perimeter.append(
+                            Raster(Linestring_perLayer, self.process.first_layer_flow, self.process.speed))
+                
+            else:
+                layer.perimeter.append(
+                            Raster(Linestring_perLayer, self.process.flow, self.process.speed))
+                
+            FlagFirstLayer = False
+            infillPath_perLayer = []
+
             # a camada atual é adicionada ao dicionário "layers" com a chave "height" referente a altura desta camada
             self.layers[height] = layer
-            
-        finalLinestring_perLayer = [coord for sublist in linestrings_perLayer for coord in sublist]
-        print(finalLinestring_perLayer)
 
     def export_gcode(self, filename):
         if self.process.verbose is True:  # linha de verificação fornecida dentro das configurações do próprio arquivo yml

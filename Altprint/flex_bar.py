@@ -4,8 +4,12 @@ import os
 # Para Ricas **
 # os.chdir("D:\códigosVScode\Altprint")
 
-# Para Stavo
-os.chdir("C:/Users/gusta/OneDrive/Documentos/OtherThings_Python/Altprint")
+# Para Stavo notebook
+#os.chdir("C:/Users/gusta/OneDrive/Documentos/OtherThings_Python/Altprint")
+
+# Para Stavo PC
+os.chdir("C:/Users/Gustavo Mariano/Documents/Github/continuous_altprint/Altprint")
+
 
 process = FlexProcess(settings_file='flex_bar.yml')
 
