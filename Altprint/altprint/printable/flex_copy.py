@@ -115,6 +115,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
 
         perimeterPath_perLayer = []
         infillPath_perLayer = []
+        last_rawList = [0]
 
         # loop que percorre todas as alturas na lista "heights". A função enumerate é usada para obter tanto o índice (i) quanto o valor (height) de cada altura.
         for i, height in enumerate(self.heights):
@@ -174,33 +175,39 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                     # --- Ignore the "Region" ---
                     # Merge the same layers LINESTRINGS
                     
-                    if j == len(layer.perimeter_paths.geoms)-1:
+                    if j == 0:
                         raw_list = RawList_Points(path, makeTuple=True)
 
                     else:
                         # Delete all redundancy from regions (repeated coords.)
                         raw_list = RawList_Points(path, makeTuple=True)
-                        #raw_list.pop()
+
+                        if raw_list[0] == last_rawList[-1]:
+                            raw_list.pop(0)
                     
-
-                    #print(perimeterPath_perLayer)
-
-
+                    last_rawList = raw_list.copy()
+                    #print(raw_list)
+                    #print()
+                    #aaaaa
                     perimeterPath_perLayer.append(raw_list.copy())
-                    
+                
+
                     
                 else:  # para as demais camadas
 
                     # Merge the same layers LINESTRINGS
-                    if j == len(layer.perimeter_paths.geoms)-1:
+                    if j == 0:
                         raw_list = RawList_Points(path, makeTuple=True)
 
                     else:
                         # Delete all redundancy from regions (repeated coords.)
                         raw_list = RawList_Points(path, makeTuple=True)
-                        #raw_list.pop()
+
+                        if raw_list[0] == last_rawList[-1]:
+                            raw_list.pop(0)
 
                     perimeterPath_perLayer.append(raw_list.copy())
+            
 
             # Concatenates lists of tuples
             finalPerimeterPath_perLayer = [coord for sublist in perimeterPath_perLayer for coord in sublist]
@@ -208,16 +215,19 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
 
             # Apply to Raster (adiciona ao perímetro da primeira camada como deve ser o fluxo e a velocidade do raster)
             if FlagFirstLayer == True: # First layer, adjust the flow
+
                 layer.perimeter.append(
                             Raster(Linestring_perLayer, self.process.first_layer_flow, self.process.speed))
-                print(finalPerimeterPath_perLayer)
-                #Probelma aparece aqui **** no perimeterPath (ele nao vai de 100.25, 139.25 até (109.25, 139.25))
+                #print(finalPerimeterPath_perLayer)
+
             else:
                 layer.perimeter.append(
                             Raster(Linestring_perLayer, self.process.flow, self.process.speed))
                 
+            # Reset Variables
             FlagFirstLayer = False
             perimeterPath_perLayer = []
+            last_rawList = [0]
 
             # percorre cada caminho no preenchimento da camada. Se o caminho estiver dentro de uma região flexível, ele é dividido em um caminho flexível e um caminho de retração, que são adicionados ao preenchimento da camada. Se o caminho não estiver dentro de uma região flexível, ele é adicionado ao preenchimento da camada como está
             for k, path in enumerate(infill_paths.geoms):
@@ -238,13 +248,15 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                     # --- Ignore the "Region" ---
                     # Merge the same layers LINESTRINGS
                     
-                    if k == len(infill_paths.geoms)-1:
+                    if k == 0:
                         raw_list = RawList_Points(path, makeTuple=True)
 
                     else:
                         # Delete all redundancy from regions (repeated coords.)
                         raw_list = RawList_Points(path, makeTuple=True)
-                        #raw_list.pop()
+
+                        if raw_list[0] == last_rawList[-1]:
+                            raw_list.pop(0)
 
                     #print(raw_list)
 
@@ -252,13 +264,15 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
 
                 else:
                     # Merge the same layers LINESTRINGS
-                    if k == len(infill_paths.geoms)-1:
+                    if k == 0:
                         raw_list = RawList_Points(path, makeTuple=True)
 
                     else:
                         # Delete all redundancy from regions (repeated coords.)
                         raw_list = RawList_Points(path, makeTuple=True)
-                        #raw_list.pop()
+
+                        if raw_list[0] == last_rawList[-1]:
+                            raw_list.pop(0)
 
 
                     infillPath_perLayer.append(raw_list.copy())
