@@ -15,3 +15,6 @@ cgal_bindings/y_monotone_partition/*.cxx
 cgal_bindings/y_monotone_partition/*.o
 cgal_bindings/y_monotone_partition/*.py
 cgal_bindings/y_monotone_partition/*.so
+TRAPEZIO_flex.stl
+TRAPEZIO_CERTO.stl
+altprint/printable/tesste.py

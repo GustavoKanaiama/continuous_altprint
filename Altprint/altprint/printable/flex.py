@@ -161,13 +161,13 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                         layer.perimeter.append(
                             Raster(path, self.process.first_layer_flow, self.process.speed))
                         
-                        print(path)
+                        #print(path)
 
                     else:  # para as demais camadas
                         # adiciona ao perímetro da camada como deve ser o fluxo e a velocidade do raster
 
                         #Stavo ---- 
-                        #if i == 1:
+                        #if i == 2:
                             #print(i, path)
                         #Stavo ---- 
 

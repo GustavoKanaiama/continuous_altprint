@@ -73,6 +73,7 @@ def text2Linestring(file):
 
 
 def closestPoint(point, RawList_points):
+    #Search for the closest point of Point from the RawList
 
     min_distance = 999  # Initilize as a number bigger enough to fit the next 'if' statement
 
@@ -82,14 +83,14 @@ def closestPoint(point, RawList_points):
         perimeterCoord = sp.Point(perimeterCoord)
 
         # Calculate the distance
-        dist = perimeterCoord.distance(point)
+        dist = perimeterCoord.distance(sp.Point(point))
 
         # Storage only the min. distance
         if dist <= min_distance:
             min_distance = dist
             closestCoord = perimeterCoord
 
-    return closestCoord
+    return closestCoord # POINT object
 
 
 def RawList_Points(linestring, makeTuple=False):
@@ -136,34 +137,17 @@ def bestPath_Infill2Perimeter(list_nextPerimeter, list_infill):
     # Function that returns the best starting point in Perimeter Path, after finish the infill
 
     # Extracting the last point
-    last_pointInfill = sp.Point(list_infill[-1].coords[-1])
+    last_pointInfill = sp.Point(list_infill[-1])
 
-    # Separate all 'aggregated by region coords.' into a list of raw coords.
-    listRaw_nextPerimeter = RawList_Points(list_nextPerimeter)
 
     # Algorith to calculate all distances(reference by last infill point) and storage the minimun distance, and the points related.
-    closestCoord = closestPoint(last_pointInfill, listRaw_nextPerimeter)
+    closestCoord = closestPoint(last_pointInfill, list_nextPerimeter)
 
-    bestPath = perimeterPath_byPoint(closestCoord, listRaw_nextPerimeter)
+    bestPath = perimeterPath_byPoint(closestCoord, list_nextPerimeter)
 
-    print(last_pointInfill)
-    print(closestCoord)
-    print(bestPath)
-    # ----------- BEGIN OF PRINTING (ONLY FOR THIS) -----------
-    # Convert the list of points to a list of LineString objects
-    #lines = [sp.LineString([sp.Point(bestPath[i]), sp.Point(
-        #bestPath[i+1])]) for i in range(len(bestPath)-1)]
 
-    # Create a MultiLineString object from the list of LineString objects
-    #multi_line = sp.MultiLineString(lines)
+    return bestPath
 
-    #gsplot = gpd.GeoSeries(multi_line)
-    #gsplot.plot()
-    #plt.show()
-
-    # ----------- END OF PRINTING (ONLY FOR THIS) -----------
-
-    #return multi_line
 
 def split_PerimeterPath(PathList, numPerimeters):
     #Split a Path list into a list of lists (each path, e.g perimeter 0, perimeter 1, etc.) (Input: list of tuples (coords.))
@@ -196,6 +180,12 @@ def split_PerimeterPath(PathList, numPerimeters):
 
     else:
         return perimeter_byNumber
+
+
+
+#a = bestPath_Infill2Perimeter()
+
+#print(a)
 
 """
 
