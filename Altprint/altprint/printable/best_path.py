@@ -1,6 +1,6 @@
 import shapely as sp
-import matplotlib.pyplot as plt
-import geopandas as gpd
+#import matplotlib.pyplot as plt
+#import geopandas as gpd
 
 
 def text2Linestring(file):
@@ -151,19 +151,19 @@ def bestPath_Infill2Perimeter(list_nextPerimeter, list_infill):
     print(bestPath)
     # ----------- BEGIN OF PRINTING (ONLY FOR THIS) -----------
     # Convert the list of points to a list of LineString objects
-    lines = [sp.LineString([sp.Point(bestPath[i]), sp.Point(
-        bestPath[i+1])]) for i in range(len(bestPath)-1)]
+    #lines = [sp.LineString([sp.Point(bestPath[i]), sp.Point(
+        #bestPath[i+1])]) for i in range(len(bestPath)-1)]
 
     # Create a MultiLineString object from the list of LineString objects
-    multi_line = sp.MultiLineString(lines)
+    #multi_line = sp.MultiLineString(lines)
 
-    gsplot = gpd.GeoSeries(multi_line)
-    gsplot.plot()
-    plt.show()
+    #gsplot = gpd.GeoSeries(multi_line)
+    #gsplot.plot()
+    #plt.show()
 
     # ----------- END OF PRINTING (ONLY FOR THIS) -----------
 
-    return multi_line
+    #return multi_line
 
 
 """

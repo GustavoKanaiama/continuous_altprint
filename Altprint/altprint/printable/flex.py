@@ -160,8 +160,17 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                         # adiciona ao perímetro da primeira camada como deve ser o fluxo e a velocidade do raster
                         layer.perimeter.append(
                             Raster(path, self.process.first_layer_flow, self.process.speed))
+                        
+                        print(path)
+
                     else:  # para as demais camadas
                         # adiciona ao perímetro da camada como deve ser o fluxo e a velocidade do raster
+
+                        #Stavo ---- 
+                        #if i == 1:
+                            #print(i, path)
+                        #Stavo ---- 
+
                         layer.perimeter.append(
                             Raster(path, self.process.flow, self.process.speed))
 
@@ -188,14 +197,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                             Raster(path, self.process.flow, self.process.speed))
             # a camada atual é adicionada ao dicionário "layers" com a chave "height" referente a altura desta camada
             self.layers[height] = layer
-            # stavo
-            if i == 0:
-                print(layer.perimeter_paths)
-                print('----------------------------------------')
-                list_object_infill = []
-                for j in layer.infill:
-                    list_object_infill.append(j.path)
-                print(list_object_infill)
+
 
     def export_gcode(self, filename):
         if self.process.verbose is True:  # linha de verificação fornecida dentro das configurações do próprio arquivo yml

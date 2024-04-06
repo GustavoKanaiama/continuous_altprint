@@ -9,8 +9,6 @@ from altprint.settingsparser import SettingsParser
 
 # -- teste
 import shapely as sp
-import matplotlib.pyplot as plt
-import geopandas as gpd
 
 from altprint.printable.best_path import *
 
@@ -182,10 +180,14 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                     else:
                         # Delete all redundancy from regions (repeated coords.)
                         raw_list = RawList_Points(path, makeTuple=True)
-                        raw_list.pop()
+                        #raw_list.pop()
+                    
+
+                    #print(perimeterPath_perLayer)
 
 
                     perimeterPath_perLayer.append(raw_list.copy())
+                    
                     
                 else:  # para as demais camadas
 
@@ -196,11 +198,9 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                     else:
                         # Delete all redundancy from regions (repeated coords.)
                         raw_list = RawList_Points(path, makeTuple=True)
-                        raw_list.pop()
-
+                        #raw_list.pop()
 
                     perimeterPath_perLayer.append(raw_list.copy())
-
 
             # Concatenates lists of tuples
             finalPerimeterPath_perLayer = [coord for sublist in perimeterPath_perLayer for coord in sublist]
@@ -210,7 +210,8 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
             if FlagFirstLayer == True: # First layer, adjust the flow
                 layer.perimeter.append(
                             Raster(Linestring_perLayer, self.process.first_layer_flow, self.process.speed))
-                
+                print(finalPerimeterPath_perLayer)
+                #Probelma aparece aqui **** no perimeterPath (ele nao vai de 100.25, 139.25 até (109.25, 139.25))
             else:
                 layer.perimeter.append(
                             Raster(Linestring_perLayer, self.process.flow, self.process.speed))
@@ -219,7 +220,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
             perimeterPath_perLayer = []
 
             # percorre cada caminho no preenchimento da camada. Se o caminho estiver dentro de uma região flexível, ele é dividido em um caminho flexível e um caminho de retração, que são adicionados ao preenchimento da camada. Se o caminho não estiver dentro de uma região flexível, ele é adicionado ao preenchimento da camada como está
-            for path in infill_paths.geoms:
+            for k, path in enumerate(infill_paths.geoms):
                 flex_path = False
 
                 """
@@ -237,26 +238,27 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                     # --- Ignore the "Region" ---
                     # Merge the same layers LINESTRINGS
                     
-                    if j == len(layer.infill_paths.geoms)-1:
+                    if k == len(infill_paths.geoms)-1:
                         raw_list = RawList_Points(path, makeTuple=True)
 
                     else:
                         # Delete all redundancy from regions (repeated coords.)
                         raw_list = RawList_Points(path, makeTuple=True)
-                        raw_list.pop()
+                        #raw_list.pop()
 
+                    #print(raw_list)
 
                     infillPath_perLayer.append(raw_list.copy())
 
                 else:
                     # Merge the same layers LINESTRINGS
-                    if j == len(layer.perimeter_paths.geoms)-1:
+                    if k == len(infill_paths.geoms)-1:
                         raw_list = RawList_Points(path, makeTuple=True)
 
                     else:
                         # Delete all redundancy from regions (repeated coords.)
                         raw_list = RawList_Points(path, makeTuple=True)
-                        raw_list.pop()
+                        #raw_list.pop()
 
 
                     infillPath_perLayer.append(raw_list.copy())
