@@ -165,6 +165,37 @@ def bestPath_Infill2Perimeter(list_nextPerimeter, list_infill):
 
     #return multi_line
 
+def split_PerimeterPath(PathList, numPerimeters):
+    #Split a Path list into a list of lists (each path, e.g perimeter 0, perimeter 1, etc.) (Input: list of tuples (coords.))
+    perimeter_byNumber = []
+    temp_list = []
+
+    count_2 = 1
+
+    firstCoord = PathList[0]
+
+    for n in range(len(PathList)):
+        temp_list.append(PathList[n])
+        count_2 += 1
+
+        if (firstCoord == PathList[n]) and (n != 0) and (count_2 > 2):
+
+            perimeter_byNumber.append(temp_list.copy())
+            temp_list = []
+
+            count_2 = 1
+        
+            if n != (len(PathList)-1): #Não esta no final
+                firstCoord = PathList[n+1]
+    
+    if numPerimeters != len(perimeter_byNumber):
+        print("Error, numPerimeters != len(perimeter_byNumber) ")
+        print("numPerimeters: ", numPerimeters)
+        print("lenPathlist: ", len(perimeter_byNumber))
+        return -1
+
+    else:
+        return perimeter_byNumber
 
 """
 

@@ -188,7 +188,6 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                     last_rawList = raw_list.copy()
                     #print(raw_list)
                     #print()
-                    #aaaaa
                     perimeterPath_perLayer.append(raw_list.copy())
                 
 
@@ -208,22 +207,35 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
 
                     perimeterPath_perLayer.append(raw_list.copy())
             
-
             # Concatenates lists of tuples
             finalPerimeterPath_perLayer = [coord for sublist in perimeterPath_perLayer for coord in sublist]
-            Linestring_perLayer = sp.LineString(finalPerimeterPath_perLayer)
+            
 
             # Apply to Raster (adiciona ao perímetro da primeira camada como deve ser o fluxo e a velocidade do raster)
             if FlagFirstLayer == True: # First layer, adjust the flow
+                
+                #Split perimeter
+                List_perimeters = split_PerimeterPath(finalPerimeterPath_perLayer, layer.perimeter_num)
 
-                layer.perimeter.append(
-                            Raster(Linestring_perLayer, self.process.first_layer_flow, self.process.speed))
-                #print(finalPerimeterPath_perLayer)
+                for n in range(len(List_perimeters)):
+                    Linestring_perLayer = sp.LineString(List_perimeters[n])
+
+                    print(List_perimeters[n])
+
+                    layer.perimeter.append(
+                                Raster(Linestring_perLayer, self.process.first_layer_flow, self.process.speed))
+                    
 
             else:
-                layer.perimeter.append(
-                            Raster(Linestring_perLayer, self.process.flow, self.process.speed))
-                
+                #Split perimeter
+                List_perimeters = split_PerimeterPath(finalPerimeterPath_perLayer, layer.perimeter_num)
+
+                for n in range(len(List_perimeters)):
+                    Linestring_perLayer = sp.LineString(List_perimeters[n])
+
+                    layer.perimeter.append(
+                                Raster(Linestring_perLayer, self.process.first_layer_flow, self.process.speed))
+                    
             # Reset Variables
             FlagFirstLayer = False
             perimeterPath_perLayer = []
