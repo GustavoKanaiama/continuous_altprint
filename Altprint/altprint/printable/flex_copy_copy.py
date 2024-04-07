@@ -113,11 +113,10 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
         # utiliza o método da classe "Layer" para criação do perímetro formado pela saia
         skirt.make_perimeter()
 
-        perimeterPath_perLayer = []
-        infillPath_perLayer = []
-        last_rawList = [0]
-
         print(len(self.heights))
+
+        NextPerimeter_calculated = False
+        optmizedPerimeterPath_perLayer = []
 
         # loop que percorre todas as alturas na lista "heights". A função enumerate é usada para obter tanto o índice (i) quanto o valor (height) de cada altura.
         for i, height in enumerate(self.heights):
@@ -244,13 +243,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                         Raster(path, self.process.first_layer_flow, self.process.speed))
 
             # ----- BEGIN OF PERIMETER ---------
-            NextPerimeter_calculated = False
-            optmizedPerimeterPath_perLayer = []
-            infillRaw_list = []
-            perimeterRaw_list = []
             List_perimeters = []
-
-            zipped = zip(layer.perimeter_paths.geoms, infill_paths.geoms)
 
             # percorre cada caminho no perímetro da camada. Se o caminho estiver dentro de uma região flexível, ele é dividido em um caminho flexível e um caminho de retração, que são adicionados ao perímetro da camada. Se o caminho não estiver dentro de uma região flexível, ele é adicionado ao perímetro da camada como está
             if i == 0:
@@ -275,6 +268,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                 for p in range(len(List_perimeters)-1):
                     List_perimeters[p+1] = bestPath_Infill2Perimeter(List_perimeters[p+1], List_perimeters[p])
 
+
                 for n in range(len(List_perimeters)):
                     LinestringPerimeter_perLayer = sp.LineString(List_perimeters[n])
 
@@ -287,14 +281,20 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                 
                 ##### Optimize Path infill -> nextPerimeter
                 if NextPerimeter_calculated == True:
-                    
+
+                    if i in [6, 7, 8]:
+                        print(i, "PERIMETRO::ANTES: ", List_perimeters)
                     List_perimeters[0] = optmizedPerimeterPath_perLayer
 
                     #### Optimize path of each perimeter (e.g internal, external)
-                    for p in range(len(List_perimeters)-1):
-                        List_perimeters[p+1] = bestPath_Infill2Perimeter(List_perimeters[p+1], List_perimeters[p])
+                    #for p in range(len(List_perimeters)-1):
+                        #List_perimeters[p+1] = bestPath_Infill2Perimeter(List_perimeters[p+1], List_perimeters[p])
                     
                     NextPerimeter_calculated = False
+                
+                if i in [6, 7, 8]:
+                    print(i, "PERIMETRO::DEPOIS: ", List_perimeters)
+
 
                 for n in range(len(List_perimeters)):
 
@@ -311,7 +311,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
             finalInfillPath_perLayer = RawList_Points(list(infill_paths.geoms)[0], makeTuple=True)
 
             #### Optimize Infill Path (same layer Perimeter->Infill)
-            finalInfillPath_perLayer = bestPath_Perimeter2Infill(List_perimeters[0], finalInfillPath_perLayer)
+            finalInfillPath_perLayer = bestPath_Perimeter2Infill(List_perimeters[-1], finalInfillPath_perLayer)
 
             LinestringInfill_perLayer = sp.LineString(finalInfillPath_perLayer)
 
@@ -325,6 +325,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                 optmizedPerimeterPath_perLayer = bestPath_Infill2Perimeter(regularPerimeter[0], finalInfillPath_perLayer)
                 NextPerimeter_calculated = True
 
+
             
 
             #### --- APPLY OTHER LAYERS INFILL TO RASTER ---
@@ -335,13 +336,13 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                 optmizedPerimeterPath_perLayer = bestPath_Infill2Perimeter(regularPerimeter[0], finalInfillPath_perLayer)
                 NextPerimeter_calculated = True
 
-                #print(i, "for Flag FALSE Infill: ", LinestringInfill_perLayer)
+                if i in [6, 7, 8]:
+                    print(i, "for Flag FALSE Infill: ", finalInfillPath_perLayer)
+                    print()
+                    print()
 
-                #if i==1:
-                    #print("Infill Path: ", LinestringInfill_perLayer)
 
             FlagInfillFirstLayer = False
-            infillPath_perLayer = []
 
             # a camada atual é adicionada ao dicionário "layers" com a chave "height" referente a altura desta camada
             self.layers[height] = layer
