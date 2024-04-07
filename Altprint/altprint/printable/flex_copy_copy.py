@@ -282,18 +282,19 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                 ##### Optimize Path infill -> nextPerimeter
                 if NextPerimeter_calculated == True:
 
-                    if i in [6, 7, 8]:
+                    if i in [4, 5, 6, 7, 8]:
                         print(i, "PERIMETRO::ANTES: ", List_perimeters)
                     List_perimeters[0] = optmizedPerimeterPath_perLayer
 
                     #### Optimize path of each perimeter (e.g internal, external)
-                    #for p in range(len(List_perimeters)-1):
-                        #List_perimeters[p+1] = bestPath_Infill2Perimeter(List_perimeters[p+1], List_perimeters[p])
+                    for p in range(len(List_perimeters)-1):
+                        List_perimeters[p+1] = bestPath_Infill2Perimeter(List_perimeters[p+1], List_perimeters[p])
                     
                     NextPerimeter_calculated = False
                 
-                if i in [6, 7, 8]:
+                if i in [4, 5, 6, 7, 8]:
                     print(i, "PERIMETRO::DEPOIS: ", List_perimeters)
+                    print()
 
 
                 for n in range(len(List_perimeters)):
@@ -336,7 +337,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                 optmizedPerimeterPath_perLayer = bestPath_Infill2Perimeter(regularPerimeter[0], finalInfillPath_perLayer)
                 NextPerimeter_calculated = True
 
-                if i in [6, 7, 8]:
+                if i in [4, 5, 6, 7, 8]:
                     print(i, "for Flag FALSE Infill: ", finalInfillPath_perLayer)
                     print()
                     print()
