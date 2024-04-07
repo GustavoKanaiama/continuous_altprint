@@ -297,6 +297,10 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                     layer.perimeter.append(
                                 Raster(Linestring_perLayer, self.process.first_layer_flow, self.process.speed))
                     
+                #print(List_perimeters)
+
+                #print(perimeterPath_byPoint(sp.Point(109.25, 139.25), List_perimeters[-1]))
+                    
                 ####### --- For Regular Perimeters (The same along Z axis)
 
                 regularPerimeter = List_perimeters.copy()
@@ -305,7 +309,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                 
                 #print(List_perimeters)
 
-            else:
+            else: #Outras camadas do Perimetro
                 #Split perimeter
                 if NextPerimeter_calculated == True:
                     
@@ -318,6 +322,10 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
 
                         layer.perimeter.append(
                                     Raster(Linestring_perLayer, self.process.first_layer_flow, self.process.speed))
+                    
+                    print()
+                    print(i, "NextPerimeterCalculated: ", List_perimeters)
+
 
 
                 if NextPerimeter_calculated == False:

@@ -111,6 +111,8 @@ def RawList_Points(linestring, makeTuple=False):
 
 
 def perimeterPath_byPoint(startPoint, rawList_perimeterPoints, clockwise=True):
+    #startPoint is a POINT object
+
     # Get the parimeter path by using the starting point, orientation and perimeter RawList_Points
 
     # Set index of start point and slice the rawList untill the end of process(firstHalf). Then get the coord. of the end, to search the
@@ -181,18 +183,3 @@ def split_PerimeterPath(PathList, numPerimeters):
     else:
         return perimeter_byNumber
 
-
-
-#a = bestPath_Infill2Perimeter()
-
-#print(a)
-
-"""
-
-with open("doc.txt", 'r') as file:
-    file = file.read()
-
-multiLinestring, linestring = text2Linestring(file)
-
-printable_path = bestPath_Infill2Perimeter(multiLinestring, linestring)
-"""
