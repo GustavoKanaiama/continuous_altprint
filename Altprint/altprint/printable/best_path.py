@@ -183,3 +183,23 @@ def split_PerimeterPath(PathList, numPerimeters):
     else:
         return perimeter_byNumber
 
+
+def bestPath_Perimeter2Infill(listPerimeter, listInfill):
+    # Search the best startPoint to initiate the Infill.
+    # Calculate the distance from the lastPointPerimeter and the pointAlfa_Infill and pointBeta_Infill
+
+    # Then the closestPoint get the priority to start the list of the infill path
+
+    pointAlfa_Infill = sp.Point(listInfill[0])
+    pointBeta_Infill = sp.Point(listInfill[-1])
+
+    lastPoint_perimeter = sp.Point(listPerimeter[-1])
+
+    distAlfa = lastPoint_perimeter.distance(pointAlfa_Infill)
+    distBeta = lastPoint_perimeter.distance(pointBeta_Infill)
+
+    if distAlfa <= distBeta:
+        return listInfill
+
+    else:
+        return listInfill[::-1] # Reversed

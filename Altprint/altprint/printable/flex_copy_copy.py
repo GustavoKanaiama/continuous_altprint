@@ -239,186 +239,178 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
             # ----- BEGIN OF PERIMETER ---------
             NextPerimeter_calculated = False
             optmizedPerimeterPath_perLayer = []
-            # percorre cada caminho no perímetro da camada. Se o caminho estiver dentro de uma região flexível, ele é dividido em um caminho flexível e um caminho de retração, que são adicionados ao perímetro da camada. Se o caminho não estiver dentro de uma região flexível, ele é adicionado ao perímetro da camada como está
-            for j, path in enumerate(layer.perimeter_paths.geoms):
+            infillRaw_list = []
+            perimeterRaw_list = []
 
-                if i == 0:  # para a primeira camada
-                    FlagFirstLayer = True
+            zipped = zip(layer.perimeter_paths.geoms, infill_paths.geoms)
+
+            # percorre cada caminho no perímetro da camada. Se o caminho estiver dentro de uma região flexível, ele é dividido em um caminho flexível e um caminho de retração, que são adicionados ao perímetro da camada. Se o caminho não estiver dentro de uma região flexível, ele é adicionado ao perímetro da camada como está
+            for j, (p_path, i_path) in enumerate(zipped):
+
+
+                #### --- BUILD LAYER PERIMETER --- 
+                if i == 0:  # para a primeira camada PERIMETRO
+                    FlagPerimeterFirstLayer = True
+                    FlagInfillFirstLayer = True
                     # --- Ignore the "Region" ---
                     # Merge the same layers LINESTRINGS
                     
                     if j == 0:
-                        raw_list = RawList_Points(path, makeTuple=True)
+                        perimeterRaw_list = RawList_Points(p_path, makeTuple=True)
 
                     else:
                         # Delete all redundancy from regions (repeated coords.)
-                        raw_list = RawList_Points(path, makeTuple=True)
+                        perimeterRaw_list = RawList_Points(p_path, makeTuple=True)
 
-                        if raw_list[0] == last_rawList[-1]:
-                            raw_list.pop(0)
+                        if perimeterRaw_list[0] == last_PerimeterRawList[-1]:
+                            perimeterRaw_list.pop(0)
                     
-                    last_rawList = raw_list.copy()
-                    #print(raw_list)
-                    #print()
-                    perimeterPath_perLayer.append(raw_list.copy())
+                    last_PerimeterRawList = perimeterRaw_list.copy()
+                    perimeterPath_perLayer.append(perimeterRaw_list.copy())
+
                 
+                #### --- BUILD FIRST LAYER INFILL ---
+                if i == 0:  # para a primeira camada
+                    FlagInfillFirstLayer = True
+        
+                    # --- Ignore the "Region" ---
+                    if j == 0:
+                        infillRaw_list = RawList_Points(i_path, makeTuple=True)
+
+                    else:
+                        # Delete all redundancy from regions (repeated coords.)
+                        infillRaw_list = RawList_Points(i_path, makeTuple=True)
+
+                        if infillRaw_list[0] == last_infillRawList[-1]:
+                            infillRaw_list.pop(0)
+
+                    #print(raw_list)
+                    last_infillRawList = infillRaw_list.copy()
+                    infillPath_perLayer.append(infillRaw_list.copy())
 
                     
-                else:  # para as demais camadas
+                #### --- BUILD OTHER LAYERS PERIMETER ----
+                if i != 0:
                     # Merge the same layers LINESTRINGS
                     if j == 0:
-                        raw_list = RawList_Points(path, makeTuple=True)
+                        perimeterRaw_list = RawList_Points(p_path, makeTuple=True)
 
                     else:
                         # Delete all redundancy from regions (repeated coords.)
-                        raw_list = RawList_Points(path, makeTuple=True)
+                        perimeterRaw_list = RawList_Points(p_path, makeTuple=True)
 
-                        if raw_list[0] == last_rawList[-1]:
-                            raw_list.pop(0)
+                        if perimeterRaw_list[0] == last_PerimeterRawList[-1]:
+                            perimeterRaw_list.pop(0)
 
-                    last_rawList = raw_list.copy()
-                    perimeterPath_perLayer.append(raw_list.copy())
+                    last_PerimeterRawList = perimeterRaw_list.copy()
+                    perimeterPath_perLayer.append(perimeterRaw_list.copy())
             
-            # Concatenates lists of tuples
+
+                #### --- BUILD OTHER LAYERS INFILL ---
+                if i != 0: # Para outras camadas
+                    # Merge the same layers LINESTRINGS
+                    if j == 0:
+                        infillRaw_list = RawList_Points(i_path, makeTuple=True)
+
+                    else:
+                        # Delete all redundancy from regions (repeated coords.)
+                        infillRaw_list = RawList_Points(i_path, makeTuple=True)
+
+                        if infillRaw_list[0] == last_infillRawList[-1]:
+                            infillRaw_list.pop(0)
+
+                    last_infillRawList = infillRaw_list.copy()
+                    infillPath_perLayer.append(infillRaw_list.copy())
+
+
+            # Concatenates lists of tuples (PERIMETER)
             finalPerimeterPath_perLayer = [coord for sublist in perimeterPath_perLayer for coord in sublist]
-            
+            List_perimeters = split_PerimeterPath(finalPerimeterPath_perLayer, layer.perimeter_num)
 
-            # Apply to Raster (adiciona ao perímetro da primeira camada como deve ser o fluxo e a velocidade do raster)
-            if FlagFirstLayer == True: # First layer, adjust the flow
-                
-                #Split perimeter
-                List_perimeters = split_PerimeterPath(finalPerimeterPath_perLayer, layer.perimeter_num)
+
+            #### --- APPLY FIRST LAYER PERIMETER TO RASTER ---
+            if FlagPerimeterFirstLayer == True: # First layer, adjust the flow
+
+                regularPerimeter = List_perimeters.copy() # --- For Regular Perimeters (The same along Z axis)
+
+                #### Optimize path of each perimeter (e.g internal, external)
+                for p in range(len(List_perimeters)-1):
+                    List_perimeters[p+1] = bestPath_Infill2Perimeter(List_perimeters[p+1], List_perimeters[p])
 
                 for n in range(len(List_perimeters)):
-                    Linestring_perLayer = sp.LineString(List_perimeters[n])
-
-                    #print(List_perimeters[n])
+                    LinestringPerimeter_perLayer = sp.LineString(List_perimeters[n])
 
                     layer.perimeter.append(
-                                Raster(Linestring_perLayer, self.process.first_layer_flow, self.process.speed))
+                                Raster(LinestringPerimeter_perLayer, self.process.first_layer_flow, self.process.speed))
                     
-                #print(List_perimeters)
 
-                #print(perimeterPath_byPoint(sp.Point(109.25, 139.25), List_perimeters[-1]))
-                    
-                ####### --- For Regular Perimeters (The same along Z axis)
-
-                regularPerimeter = List_perimeters.copy()
-
-                ####### ---
+            #### --- APPLY OTHER LAYERS PERIMETER TO RASTER ---
+            if FlagPerimeterFirstLayer == False: ### Outras camadas do Perimetro
                 
-                #print(List_perimeters)
-
-            else: #Outras camadas do Perimetro
-                #Split perimeter
+                ##### Optimize Path infill -> nextPerimeter
                 if NextPerimeter_calculated == True:
                     
-                    optmizedList_perimeters = split_PerimeterPath(optmizedPerimeterPath_perLayer, layer.perimeter_num)
+                    List_perimeters[0] = optmizedPerimeterPath_perLayer
 
-                    List_perimeters[0] = optmizedList_perimeters.copy()
-
-                    for n in range(len(List_perimeters)):
-                        Linestring_perLayer = sp.LineString(List_perimeters[n])
-
-                        layer.perimeter.append(
-                                    Raster(Linestring_perLayer, self.process.first_layer_flow, self.process.speed))
+                    #### Optimize path of each perimeter (e.g internal, external)
+                    for p in range(len(List_perimeters)-1):
+                        List_perimeters[p+1] = bestPath_Infill2Perimeter(List_perimeters[p+1], List_perimeters[p])
                     
-                    print()
-                    print("------")
-                    print(i, "NextPerimeterCalculated: ", List_perimeters)
-                    print("------")
+                    NextPerimeter_calculated = False
 
+                for n in range(len(List_perimeters)):
 
-
-                if NextPerimeter_calculated == False:
-                    print(i, "nao calculou")
-
-                    List_perimeters = split_PerimeterPath(finalPerimeterPath_perLayer, layer.perimeter_num)
-
-                    for n in range(len(List_perimeters)):
-                        Linestring_perLayer = sp.LineString(List_perimeters[n])
-
-                        layer.perimeter.append(
-                                    Raster(Linestring_perLayer, self.process.first_layer_flow, self.process.speed))
+                    LinestringPerimeter_perLayer = sp.LineString(List_perimeters[n])
+                    layer.perimeter.append(
+                                Raster(LinestringPerimeter_perLayer, self.process.first_layer_flow, self.process.speed))
+                
+                if i == 2:
+                    print("ListPerimeters", List_perimeters)
 
 
             # Reset Variables
-            FlagFirstLayer = False
+            FlagPerimeterFirstLayer = False
             perimeterPath_perLayer = []
-            last_rawList = [0]
-
-            # ----- END OF PERIMETER ---------
-
-            # ----- BEGIN OF INFILL ----------
-            # percorre cada caminho no preenchimento da camada. Se o caminho estiver dentro de uma região flexível, ele é dividido em um caminho flexível e um caminho de retração, que são adicionados ao preenchimento da camada. Se o caminho não estiver dentro de uma região flexível, ele é adicionado ao preenchimento da camada como está
-            for k, path in enumerate(infill_paths.geoms):
 
 
-                if i == 0:  # para a primeira camada
-                    FlagFirstLayer = True
-        
-                    # --- Ignore the "Region" ---
-                    
-                    if k == 0:
-                        raw_list = RawList_Points(path, makeTuple=True)
-
-                    else:
-                        # Delete all redundancy from regions (repeated coords.)
-                        raw_list = RawList_Points(path, makeTuple=True)
-
-                        if raw_list[0] == last_rawList[-1]:
-                            raw_list.pop(0)
-
-                    #print(raw_list)
-                    last_rawList = raw_list.copy()
-                    infillPath_perLayer.append(raw_list.copy())
-
-
-                else: # Para outras camadas
-                    # Merge the same layers LINESTRINGS
-                    if k == 0:
-                        raw_list = RawList_Points(path, makeTuple=True)
-
-                    else:
-                        # Delete all redundancy from regions (repeated coords.)
-                        raw_list = RawList_Points(path, makeTuple=True)
-
-                        if raw_list[0] == last_rawList[-1]:
-                            raw_list.pop(0)
-
-                    last_rawList = raw_list.copy()
-                    infillPath_perLayer.append(raw_list.copy())
-
-
-            # Concatenates lists of tuples
+            # Concatenates lists of tuples (INFILL)
             finalInfillPath_perLayer = [coord for sublist in infillPath_perLayer for coord in sublist]
-            Linestring_perLayer = sp.LineString(finalInfillPath_perLayer)
 
+            #### Optimize Infill Path (same layer Perimeter->Infill)
+            finalInfillPath_perLayer = bestPath_Infill2Perimeter(List_perimeters[0], finalInfillPath_perLayer)
+
+            LinestringInfill_perLayer = sp.LineString(finalInfillPath_perLayer)
+
+            #### --- APPLY FIRST LAYER INFILL TO RASTER ---
             # Apply to Raster (adiciona ao perímetro da primeira camada como deve ser o fluxo e a velocidade do raster)
-            if FlagFirstLayer == True: # First layer, adjust the flow
+            if FlagInfillFirstLayer == True: # First layer, adjust the flow
+
                 layer.perimeter.append(
-                            Raster(Linestring_perLayer, self.process.first_layer_flow, self.process.speed))
+                            Raster(LinestringInfill_perLayer, self.process.first_layer_flow, self.process.speed))
+                
+                optmizedPerimeterPath_perLayer = bestPath_Infill2Perimeter(regularPerimeter[0], finalInfillPath_perLayer)
+                NextPerimeter_calculated = True
+            
+
+            #### --- APPLY OTHER LAYERS INFILL TO RASTER ---
+            if FlagInfillFirstLayer == False:
+                layer.perimeter.append(
+                            Raster(LinestringInfill_perLayer, self.process.flow, self.process.speed))
                 
                 optmizedPerimeterPath_perLayer = bestPath_Infill2Perimeter(regularPerimeter[0], finalInfillPath_perLayer)
                 NextPerimeter_calculated = True
 
-                #print("Infill linestring: ", finalInfillPath_perLayer)
-                
-            else:
-                layer.perimeter.append(
-                            Raster(Linestring_perLayer, self.process.flow, self.process.speed))
-                
-                optmizedPerimeterPath_perLayer = bestPath_Infill2Perimeter(regularPerimeter[0], finalInfillPath_perLayer)
-                NextPerimeter_calculated = True
-                print(NextPerimeter_calculated)
+                if i==1:
+                    print("Infill Path: ", finalInfillPath_perLayer)
 
-            FlagFirstLayer = False
+            FlagInfillFirstLayer = False
             infillPath_perLayer = []
 
             # a camada atual é adicionada ao dicionário "layers" com a chave "height" referente a altura desta camada
             self.layers[height] = layer
 
     # ----- END OF INFILL ----------
+
     def export_gcode(self, filename):
         if self.process.verbose is True:  # linha de verificação fornecida dentro das configurações do próprio arquivo yml
             # mensagem quando executa essa função do programa
