@@ -5,6 +5,7 @@ import os
 # os.chdir("D:\códigosVScode\Altprint")
 
 # Para Stavo notebook
+##
 os.chdir("C:/Users/gusta/OneDrive/Documentos/GitHub/continuous_altprint/Altprint/altprint")
 
 # Para Stavo PC
