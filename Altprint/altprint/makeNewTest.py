@@ -3,60 +3,54 @@
 ### --- How to use ---
 
 #0- import makeNewTest.py functions
+# 0- import plotly.graph_objects as go
 
-#1- Create a 'axes' object
-ax = plt.axes(projection="3d")
+#1- Create a 'fig' object
+fig = go.Figure()
 
 # 2- call 'trace_line' function
 trace_layer(infill, z=1)
 trace_layer(perimeter, z=4)
 
 # 3- plot the results
-plt.show()
+fig.show()
 
 '''
-import numpy as np
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 
-#Function to trace a "line" (array with linspace) between two coordinates (x, y):
-def trace_line(axes_obj, coord1, coord2, n_pts=50, first=False, last=False, z=1):
-    #n_pts: number of points between two coordinates
+
+def trace_layer(fig_obj, data, z=1):
+
+    #Define initial Point
+    x_initial = [data[0][0]]
+    y_initial = [data[0][1]]
+    z_initial = [z]
+
+    #Define last Point
+    x_last = [data[-1][0]]
+    y_last = [data[-1][1]]
+    z_last = [z]
+
+    #Define 'trace line' data
+    x_data = [x for x,y in data]
+    y_data = [y for x,y in data]
+    z_data = [z for i in range(len(data))]
+
+    #Add trace line
+    fig_obj.add_trace(go.Scatter3d(x=x_data, y=y_data, z=z_data, marker=dict(color='Blue',size=1)))
     
-    # Initial Point -> Green
-    # Last Point -> Red
+    #Add initial point
+    fig_obj.add_trace(go.Scatter3d(x=x_initial, y=y_initial, z=z_initial, marker=dict(color='Green',size=5)))
 
-    x1, y1 = coord1
-    x2, y2 = coord2
-    if first ==True:
-        #print initial values
-        axes_obj.scatter(x1, y1, z, s=7, c='green')
-
-        x_lin = np.linspace(x1+(abs(x1-x2)/n_pts), x2, n_pts)
-        y_lin = np.linspace(y1+(abs(y1-y2)/n_pts), y2, n_pts)
-    
-    else:
-        x_lin = np.linspace(x1, x2, n_pts)
-        y_lin = np.linspace(y1, y2, n_pts)
-
-    if last == True:
-        #print last values
-        axes_obj.scatter(x2, y2, z, s=7, c='red')
-
-    axes_obj.scatter(x_lin, y_lin, z, s=0.4, c='blue')
+    #Add last point
+    fig_obj.add_trace(go.Scatter3d(x=x_last, y=y_last, z=z_last, marker=dict(color='Red',size=5)))
 
     return 0
 
-def trace_layer(axes_obj, layer_array, n_pts=50, z=1):
+'''
+fig = go.Figure()
 
-    for i in range(len(layer_array)-1):
+trace_layer(fig, data, 2)
 
-        if i == 0:
-            trace_line(axes_obj, layer_array[i], layer_array[i+1], first=True, n_pts=n_pts, z=z)
-
-        elif i == len(layer_array)-2:
-            trace_line(axes_obj, layer_array[i], layer_array[i+1], last=True, n_pts=n_pts, z=z)
-        
-        else:
-            trace_line(axes_obj, layer_array[i], layer_array[i+1], n_pts=n_pts, z=z)
-    
-    return 0
+fig.show()
+'''

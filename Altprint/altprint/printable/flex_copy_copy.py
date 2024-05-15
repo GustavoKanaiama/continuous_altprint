@@ -6,12 +6,11 @@ from altprint.infill.rectilinear_infill import RectilinearInfill
 from altprint.gcode import GcodeExporter
 from altprint.lineutil import split_by_regions, retract
 from altprint.settingsparser import SettingsParser
-from altprint.makeNewTest import trace_layer, trace_line
+from altprint.makeNewTest import trace_layer
 
 # -- teste
 import shapely as sp
-import numpy as np
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 from altprint.printable.best_path import *
 
 
@@ -95,7 +94,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
         self.flex_planes = slicer.slice_model(self.heights)
 
     def make_layers(self):  # método que gera as trajetórias das camadas, desde a saia inicial, e o perímetro/contorno e o preenchimento de cada camada
-        axes = plt.axes(projection="3d")
+        fig = go.Figure()
 
 
         if self.process.verbose is True:  # linha de verificação fornecida dentro das configurações do próprio arquivo yml
@@ -290,8 +289,6 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                 ##### Optimize Path infill -> nextPerimeter
                 if NextPerimeter_calculated == True:
 
-                    if i in [8]:
-                        print(i, "PERIMETRO::ANTES: ", List_perimeters)
                     List_perimeters[0] = optmizedPerimeterPath_perLayer
 
                     #### Optimize path of each perimeter (e.g internal, external)
@@ -302,17 +299,9 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                 
                 
 
-                if i in [7, 8]:
-                    print(i, "PERIMETRO::DEPOIS: ", List_perimeters)
-                    print("asdasdasd")
-                    print(List_perimeters[0])
-                    print("sdadad")
-                    trace_layer(axes, List_perimeters[0], z=i)
-                    trace_layer(axes, List_perimeters[1], z=i)
-                    print()
-                    
-                
-
+                if i in [7, 8]:#Visualize perimeter layer
+                    trace_layer(fig, List_perimeters[0], z=i)
+                    trace_layer(fig, List_perimeters[1], z=i+0.25)
 
 
 
@@ -357,11 +346,9 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                 optmizedPerimeterPath_perLayer = bestPath_Infill2Perimeter(regularPerimeter[0], finalInfillPath_perLayer)
                 NextPerimeter_calculated = True
 
-                if i in [7, 8]:
-                    print(i, "for Flag FALSE Infill: ", finalInfillPath_perLayer)
-                    print()
-                    trace_layer(axes, finalInfillPath_perLayer, z=i)
-                    print()
+                if i in [7, 8]: #Visualize infill
+                    trace_layer(fig, finalInfillPath_perLayer, z=i+0.5)
+
             
 
 
@@ -369,7 +356,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
 
             # a camada atual é adicionada ao dicionário "layers" com a chave "height" referente a altura desta camada
             self.layers[height] = layer
-        plt.show()
+        fig.show()
 
     # ----- END OF INFILL ----------
     
