@@ -8,6 +8,7 @@ from altprint.lineutil import split_by_regions, retract
 from altprint.settingsparser import SettingsParser
 
 
+
 class FlexProcess():  # definição da classe responsável por controlar os parâmetros de impressão
     # método construtor da classe, aceita um número arbitrário de argumentos de palavra-chave
     def __init__(self, **kwargs):

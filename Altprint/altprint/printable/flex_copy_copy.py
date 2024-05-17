@@ -96,6 +96,8 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
     def make_layers(self):  # método que gera as trajetórias das camadas, desde a saia inicial, e o perímetro/contorno e o preenchimento de cada camada
         fig = go.Figure()
 
+        visualizing_layers = [1, 11, 24, 32]
+
 
         if self.process.verbose is True:  # linha de verificação fornecida dentro das configurações do próprio arquivo yml
 
@@ -115,11 +117,6 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
 
         # utiliza o método da classe "Layer" para criação do perímetro formado pela saia
         skirt.make_perimeter()
-
-        print(len(self.heights))
-
-        NextPerimeter_calculated = False
-        optmizedPerimeterPath_perLayer = []
         
         ####
         ###    
@@ -135,83 +132,6 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                           self.process.perimeter_gap,
                           self.process.external_adjust,
                           self.process.overlap)
-            
-            """
-            # ------- BEGIN OF NEXT LAYER -------
-            if (i+1) <= (len(self.heights)-1):
-                nextLayer = Layer(self.sliced_planes.planes[self.heights[i+1]],
-                            self.process.perimeter_num,
-                            self.process.perimeter_gap,
-                            self.process.external_adjust,
-                            self.process.overlap)
-                
-                if nextLayer.shape == []:
-                    self.layers[height] = nextLayer
-                    continue
-
-                nextLayer.make_perimeter()
-                nextLayer.make_infill_border()
-
-                nextFlex_regions = self.flex_planes.planes[self.heights[i+1]]
-
-                # Se "flex_regions" não for uma lista, ele é convertido em uma lista
-                if not type(nextFlex_regions) == list:  # noqa: E721
-                    nextFlex_regions = list(nextFlex_regions.geoms)
-
-                # Os caminhos do perímetro da camada são divididos pelas regiões flexíveis
-                nextLayer.perimeter_paths = split_by_regions(nextLayer.perimeter_paths, nextFlex_regions)
-
-
-                # percorre cada caminho no perímetro da camada. Se o caminho estiver dentro de uma região flexível, ele é dividido em um caminho flexível e um caminho de retração, que são adicionados ao perímetro da camada. Se o caminho não estiver dentro de uma região flexível, ele é adicionado ao perímetro da camada como está
-                for j, path in enumerate(nextLayer.perimeter_paths.geoms):
-
-                    # Merge the same layers LINESTRINGS
-                    if j == 0:
-                        nextRawList = RawList_Points(path, makeTuple=True)
-
-                    else:
-                        # Delete all redundancy from regions (repeated coords.)
-                        nextRawList = RawList_Points(path, makeTuple=True)
-
-                        if i == 1:
-                            print("rawList antes:", nextRawList)
-
-                        if nextRawList[0] == last_rawList[-1]:
-                            nextRawList.pop(0)
-
-                        if i == 1:
-                            print("rawList depois:", nextRawList)
-                            print()
-
-                    perimeterPath_perLayer.append(nextRawList.copy())
-                
-                # Concatenates lists of tuples
-                finalPerimeterPath_perLayer = [coord for sublist in perimeterPath_perLayer for coord in sublist]
-                
-                #Split perimeter
-                List_perimeters = split_PerimeterPath(finalPerimeterPath_perLayer, nextLayer.perimeter_num)
-
-                for n in range(len(List_perimeters)):
-                    Linestring_perLayer = sp.LineString(List_perimeters[n])
-
-                    nextLayer.perimeter.append(
-                                Raster(Linestring_perLayer, self.process.first_layer_flow, self.process.speed))
-                    
-                #print(i, "NextPerimeter Path: ", finalPerimeterPath_perLayer)
-                #print()
-                print()
-                        
-                        
-                # Reset Variables
-                FlagFirstLayer = False
-                perimeterPath_perLayer = []
-                last_rawList = [0]
-
-
-
-            # ---- END OF NEXT LAYER -----
-            """
-
 
             # Se o atributo shape do objeto layer for uma lista vazia, o objeto layer é adicionado ao dicionário "layers" com a chave "height" e o loop continua para a próxima iteração.
             if layer.shape == []:
@@ -243,11 +163,18 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
             #infill_paths = split_by_regions(infill_paths, flex_regions)
 
             # Se esta for a primeira iteração do loop (ou seja, se estamos na primeira camada), os caminhos do perímetro da saia são adicionados ao perímetro da camada
+            List_skirt = []
             if i == 0:  # skirt
                 for path in skirt.perimeter_paths.geoms:
                     # com raster, faz a saia com os parâmetros fornecidos do arquivo yml
                     layer.perimeter.append(
                         Raster(path, self.process.first_layer_flow, self.process.speed))
+                    
+                    List_skirt.append(RawList_Points(path, makeTuple=True))
+            
+                print(List_skirt)
+                lastLoop_skirt = List_skirt[-1]
+                    
 
             # ----- BEGIN OF PERIMETER ---------
             List_perimeters = []
@@ -262,19 +189,19 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
 
 
             #CAST list of LINESTRINGS to list of Lists (tuples are coords.)
-            for j in list(layer.perimeter_paths.geoms):
-                List_perimeters.append(RawList_Points(j, makeTuple=True))
+            for path in list(layer.perimeter_paths.geoms):
+                List_perimeters.append(RawList_Points(path, makeTuple=True))
+
+
+            # List_perimeters[0] -> externo
+            # List_perimeters[1] -> interno
 
 
             #### --- APPLY FIRST LAYER PERIMETER TO RASTER ---
             if FlagPerimeterFirstLayer == True: # First layer, adjust the flow
 
-                regularPerimeter = List_perimeters.copy() # --- For Regular Perimeters (The same along Z axis)
-
-                #### Optimize path of each perimeter (e.g internal, external)
-                for p in range(len(List_perimeters)-1):
-                    List_perimeters[p+1] = bestPath_Infill2Perimeter(List_perimeters[p+1], List_perimeters[p])
-
+                for p in range(len(List_perimeters)):
+                    List_perimeters[p] = bestPath_Infill2Perimeter(List_perimeters[p], lastLoop_skirt)
 
                 for n in range(len(List_perimeters)):
                     LinestringPerimeter_perLayer = sp.LineString(List_perimeters[n])
@@ -285,24 +212,10 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
 
             #### --- APPLY OTHER LAYERS PERIMETER TO RASTER ---
             if FlagPerimeterFirstLayer == False: ### Outras camadas do Perimetro
+
+                for p in range(len(List_perimeters)):
+                    List_perimeters[p] = bestPath_Infill2Perimeter(List_perimeters[p], Last_infillList_previousLayer)
                 
-                ##### Optimize Path infill -> nextPerimeter
-                if NextPerimeter_calculated == True:
-
-                    List_perimeters[0] = optmizedPerimeterPath_perLayer
-
-                    #### Optimize path of each perimeter (e.g internal, external)
-                    for p in range(len(List_perimeters)-1):
-                        List_perimeters[p+1] = bestPath_Infill2Perimeter(List_perimeters[p+1], List_perimeters[p])
-                    
-                    NextPerimeter_calculated = False
-                
-                
-
-                if i in [7, 8]:#Visualize perimeter layer
-                    trace_layer(fig, List_perimeters[0], z=i)
-                    trace_layer(fig, List_perimeters[1], z=i+0.25)
-
 
 
                 for n in range(len(List_perimeters)):
@@ -311,7 +224,11 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                     layer.perimeter.append(
                                 Raster(LinestringPerimeter_perLayer, self.process.first_layer_flow, self.process.speed))
 
-            
+            ## ---- VISUALIZE perimeter layer ----
+            if i in visualizing_layers:
+                trace_layer(fig, List_perimeters[0], z=i)
+                trace_layer(fig, List_perimeters[1], z=i+0.25)
+
 
             # Reset Variables
             FlagPerimeterFirstLayer = False
@@ -331,26 +248,21 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
 
                 layer.infill.append(
                             Raster(LinestringInfill_perLayer, self.process.first_layer_flow, self.process.speed))
-                
-                optmizedPerimeterPath_perLayer = bestPath_Infill2Perimeter(regularPerimeter[0], finalInfillPath_perLayer)
-                NextPerimeter_calculated = True
 
 
             
-
             #### --- APPLY OTHER LAYERS INFILL TO RASTER ---
             if FlagInfillFirstLayer == False:
                 layer.infill.append(
                             Raster(LinestringInfill_perLayer, self.process.flow, self.process.speed))
-                
-                optmizedPerimeterPath_perLayer = bestPath_Infill2Perimeter(regularPerimeter[0], finalInfillPath_perLayer)
-                NextPerimeter_calculated = True
 
-                if i in [7, 8]: #Visualize infill
-                    trace_layer(fig, finalInfillPath_perLayer, z=i+0.5)
 
-            
+            Last_infillList_previousLayer = finalInfillPath_perLayer.copy()
+            ## ---- VISUALIZE infill layer ----
+            if i in visualizing_layers:
+                trace_layer(fig, finalInfillPath_perLayer, z=i+0.5)
 
+        
 
             FlagInfillFirstLayer = False
 

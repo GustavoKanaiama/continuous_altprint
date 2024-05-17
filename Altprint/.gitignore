@@ -18,4 +18,4 @@ cgal_bindings/y_monotone_partition/*.so
 TRAPEZIO_flex.stl
 TRAPEZIO_CERTO.stl
 altprint/printable/tesste.py
-flex_bar.yml
+.yml
