@@ -74,11 +74,15 @@ def text2Linestring(file):
 
 def closestPoint(point, RawList_points):
     #Search for the closest point of Point from the RawList
+    #agg_info: agregated info, such as angle for each RawPoint
 
     min_distance = 999  # Initilize as a number bigger enough to fit the next 'if' statement
 
-    for perimeterCoord in RawList_points:
+    for i in range(len(RawList_points)):
 
+
+        perimeterCoord = RawList_points[i]
+        
         # Cast to 'Point' Object
         perimeterCoord = sp.Point(perimeterCoord)
 
@@ -90,7 +94,8 @@ def closestPoint(point, RawList_points):
             min_distance = dist
             closestCoord = perimeterCoord
 
-    return closestCoord # POINT object
+    return closestCoord
+
 
 
 def RawList_Points(linestring, makeTuple=False):
@@ -204,5 +209,24 @@ def bestPath_Perimeter2Infill(listPerimeter, listInfill):
     else:
         return listInfill[::-1] # Reversed
     
+def bestPath_Perimeter2Infill_rotate(List_infill, perimeter_path, List_angles):
 
-#def bestPath_angle_Perimeter2Infill(listAngles)
+    min_dist = 999
+    infill_index = 0.5 #just initialize the variable, if its not used it will crash the code
+
+    #Pick the best infill rotation
+    for i in range(len(List_infill)):
+        infillPath_Rotation = bestPath_Perimeter2Infill(perimeter_path, List_infill[i])
+
+        #Calculate distance for each closest point (by angle rotation)
+        cp = closestPoint(perimeter_path[-1], infillPath_Rotation)
+        dist = cp.distance(sp.Point(perimeter_path[-1]))
+
+        if dist <= min_dist:
+            min_dist = dist
+            infill_index = i
+
+    #Pick the best path from the 2 points(start, end)
+    bestInfill = bestPath_Perimeter2Infill(perimeter_path, List_infill[infill_index])
+
+    return bestInfill, List_angles[i]

@@ -12,7 +12,7 @@ os.chdir("C:/Users/gusta/OneDrive/Documentos/GitHub/continuous_altprint-1/Altpri
 #os.chdir("C:/Users/Gustavo Mariano/Documents/Github/continuous_altprint/Altprint")
 
 
-process = StandartProcess(settings_file='flex_bar.yml')
+process = StandartProcess(settings_file='cube.yml')
 
 
 part = StandartPrint(process)

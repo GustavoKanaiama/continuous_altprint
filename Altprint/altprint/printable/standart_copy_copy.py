@@ -67,7 +67,7 @@ class StandartPrint(BasePrint):
     def make_layers(self):  # método que gera as trajetórias das camadas, desde a saia inicial, e o perímetro/contorno e o preenchimento de cada camada
         fig = go.Figure()
 
-        visualizing_layers = [3, 4, 5, 6]
+        visualizing_layers = [0, 1, 8, 9, 15]
 
 
         if self.process.verbose is True:  # linha de verificação fornecida dentro das configurações do próprio arquivo yml
@@ -114,16 +114,7 @@ class StandartPrint(BasePrint):
             layer.make_infill_border()
 
 
-            #angle treatment for standartProcess
-            if type(self.process.infill_angle) == list: # noqa: E721
-                infill_angle = self.process.infill_angle[i%len(self.process.infill_angle)] # noqa: E501
-            else:
-                infill_angle = self.process.infill_angle
 
-            # gera os caminhos de preenchimento da camada atual baseado no método da classe "RectilinearInfill" que recebe os parãmetros referentes ao preenchimento fornecidos pelo arquivo yml
-            infill_paths = infill_method.generate_infill(layer,
-                                                         self.process.raster_gap,
-                                                         infill_angle)
             # define a região flexível na camada atual baseado nos planos que compêm cada camada desta região já definida na função "slice"
 
             # Os caminhos do perímetro da camada são divididos pelas regiões flexíveis
@@ -146,7 +137,6 @@ class StandartPrint(BasePrint):
                     
                     List_skirt.append(RawList_Points(path, makeTuple=True))
             
-                print(List_skirt)
                 lastLoop_skirt = List_skirt[-1]
                     
 
@@ -191,12 +181,12 @@ class StandartPrint(BasePrint):
                     List_perimeters[p] = bestPath_Infill2Perimeter(List_perimeters[p], Last_infillList_previousLayer)
                 
 
-
                 for n in range(len(List_perimeters)):
 
                     LinestringPerimeter_perLayer = sp.LineString(List_perimeters[n])
                     layer.perimeter.append(
                                 Raster(LinestringPerimeter_perLayer, self.process.first_layer_flow, self.process.speed))
+
 
             ## ---- VISUALIZE perimeter layer ----
             if i in visualizing_layers:
@@ -206,13 +196,22 @@ class StandartPrint(BasePrint):
 
             # Reset Variables
             FlagPerimeterFirstLayer = False
+            InfillPath_byAngle = []
 
+            #angle treatment for standartProcess
+            List_angles = self.process.infill_angle
 
-            # Concatenates lists of tuples (INFILL)
-            finalInfillPath_perLayer = RawList_Points(list(infill_paths.geoms)[0], makeTuple=True)
+            for angle in range(len(List_angles)):
+                #append all possible infillPaths for each angle
+                
+                infill_paths = infill_method.generate_infill(layer,
+                                            self.process.raster_gap,
+                                            List_angles[angle])
+                
+                InfillPath_byAngle.append(RawList_Points(list(infill_paths.geoms)[0], makeTuple=True))
 
             #### Optimize Infill Path (same layer Perimeter->Infill)
-            finalInfillPath_perLayer = bestPath_Perimeter2Infill(List_perimeters[-1], finalInfillPath_perLayer)
+            finalInfillPath_perLayer, bestAngle = bestPath_Perimeter2Infill_rotate(InfillPath_byAngle, List_perimeters[-1], List_angles)
 
             LinestringInfill_perLayer = sp.LineString(finalInfillPath_perLayer)
 
@@ -227,6 +226,26 @@ class StandartPrint(BasePrint):
             
             #### --- APPLY OTHER LAYERS INFILL TO RASTER ---
             if FlagInfillFirstLayer == False:
+
+                Infill_perAngle = []
+
+                #### OPTMIZE angle due to previous perimeter layer (e.g. decide if the best angle is 90º or 0º)
+
+                List_angles = self.process.infill_angle
+
+                for angle in List_angles: #angle list
+
+                    infill_path = infill_method.generate_infill(layer,
+                                                            self.process.raster_gap,
+                                                            angle)
+
+                    Infill_perAngle.append(RawList_Points(list(infill_path.geoms)[0], makeTuple=True))
+                
+                #Now able to see the bestAngle variable (not currently used)
+                finalInfillPath_perLayer, bestAngle = bestPath_Perimeter2Infill_rotate(Infill_perAngle, List_perimeters[-1], List_angles)
+
+                LinestringInfill_perLayer = sp.LineString(finalInfillPath_perLayer)
+
                 layer.infill.append(
                             Raster(LinestringInfill_perLayer, self.process.flow, self.process.speed))
 
