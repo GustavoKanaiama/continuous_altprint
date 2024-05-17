@@ -2,7 +2,7 @@ model_file: TRAPEZIO_CERTO.stl #arquivo da peça desejada
 flex_model_file: TRAPEZIO_flex.stl #arquivo da "peça" que representa a região flexível na peça original
 start_script: scripts/start.gcode #arquivo cabeçalho de inicio da impressora
 end_script: scripts/end.gcode #arquivo cabeçalho de fim da impressora
-infill_angle: 90 #angulo de preenchimento
+infill_angle: [0, 90] #angulo de preenchimento
 infill_gap: 0.5 #prenchimento de lacuna
 offset: [100, 100, 0] #ponto zero da mesa
 external_adjust: 0.5 #ajuste dimensional, eh um offset que ele da nas laterais

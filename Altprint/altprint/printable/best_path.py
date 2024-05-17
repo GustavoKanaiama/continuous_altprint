@@ -203,3 +203,6 @@ def bestPath_Perimeter2Infill(listPerimeter, listInfill):
 
     else:
         return listInfill[::-1] # Reversed
+    
+
+#def bestPath_angle_Perimeter2Infill(listAngles)

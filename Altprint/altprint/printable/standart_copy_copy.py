@@ -64,59 +64,188 @@ class StandartPrint(BasePrint):
         self.sliced_planes = slicer.slice_model()
         self.heights = self.sliced_planes.get_heights()
 
-    def make_layers(self):
+    def make_layers(self):  # método que gera as trajetórias das camadas, desde a saia inicial, e o perímetro/contorno e o preenchimento de cada camada
         fig = go.Figure()
 
-        if self.process.verbose is True:
+        visualizing_layers = [3, 4, 5, 6]
+
+
+        if self.process.verbose is True:  # linha de verificação fornecida dentro das configurações do próprio arquivo yml
+
+            # mensagem quando executa essa função do programa
             print("generating layers ...")
+
+        # atribui as configurações dos parâmetros de impressão como um objeto da classe RectilinearInfill
         infill_method = self.process.infill_method()
 
+        # lógica de construção da saia em volta da primeira camada da peça
+        # cria uma instância "skirt" da classe "Layer" que recebe os parâmetros da saia fornecidos pelo arquivo yml
         skirt = Layer(self.sliced_planes.planes[self.heights[0]],
                       self.process.skirt_num,
                       self.process.skirt_gap,
-                      - self.process.skirt_distance - self.process.skirt_gap * self.process.skirt_num, #noqa: E501
+                      - self.process.skirt_distance - self.process.skirt_gap * self.process.skirt_num,  # noqa: E501
                       self.process.overlap)
-        skirt.make_perimeter()
 
+        # utiliza o método da classe "Layer" para criação do perímetro formado pela saia
+        skirt.make_perimeter()
+        
+        ####
+        ###    
+        
+
+        # loop que percorre todas as alturas na lista "heights". A função enumerate é usada para obter tanto o índice (i) quanto o valor (height) de cada altura.
         for i, height in enumerate(self.heights):
+
+
+            # para cada altura, é criado um novo objeto "Layer", que recebe os parãmetros referentes ao perímetro fornecidos pelo arquivo yml, e atribuído a "layer" que é referente a cada camada
             layer = Layer(self.sliced_planes.planes[height],
                           self.process.perimeter_num,
                           self.process.perimeter_gap,
                           self.process.external_adjust,
                           self.process.overlap)
+
+            # Se o atributo shape do objeto layer for uma lista vazia, o objeto layer é adicionado ao dicionário "layers" com a chave "height" e o loop continua para a próxima iteração.
+            if layer.shape == []:
+                self.layers[height] = layer
+                continue
+            # utiliza o método da classe "Layer" para criação do perímetro da camada atual
             layer.make_perimeter()
+            # utiliza o método da classe "Layer" para criação dos limites do preenchimento da camada atual
             layer.make_infill_border()
 
+
+            #angle treatment for standartProcess
             if type(self.process.infill_angle) == list: # noqa: E721
                 infill_angle = self.process.infill_angle[i%len(self.process.infill_angle)] # noqa: E501
             else:
                 infill_angle = self.process.infill_angle
+
+            # gera os caminhos de preenchimento da camada atual baseado no método da classe "RectilinearInfill" que recebe os parãmetros referentes ao preenchimento fornecidos pelo arquivo yml
             infill_paths = infill_method.generate_infill(layer,
                                                          self.process.raster_gap,
                                                          infill_angle)
+            # define a região flexível na camada atual baseado nos planos que compêm cada camada desta região já definida na função "slice"
+
+            # Os caminhos do perímetro da camada são divididos pelas regiões flexíveis
             
+            #******************
+            #layer.perimeter_paths = split_by_regions(layer.perimeter_paths, flex_regions)  # noqa: E501
+            
+            # Os caminhos de preenchimento também são divididos pelas regiões flexíveis
+            
+            #******************
+            #infill_paths = split_by_regions(infill_paths, flex_regions)
 
-
-            if i==0: #skirt
+            # Se esta for a primeira iteração do loop (ou seja, se estamos na primeira camada), os caminhos do perímetro da saia são adicionados ao perímetro da camada
+            List_skirt = []
+            if i == 0:  # skirt
                 for path in skirt.perimeter_paths.geoms:
-                    layer.perimeter.append(Raster(path, self.process.flow, self.process.speed)) # noqa: E501
+                    # com raster, faz a saia com os parâmetros fornecidos do arquivo yml
+                    layer.perimeter.append(
+                        Raster(path, self.process.first_layer_flow, self.process.speed))
+                    
+                    List_skirt.append(RawList_Points(path, makeTuple=True))
+            
+                print(List_skirt)
+                lastLoop_skirt = List_skirt[-1]
+                    
 
-            for path in layer.perimeter_paths.geoms:
+            # ----- BEGIN OF PERIMETER ---------
+            List_perimeters = []
 
-                if i in [2, 3, 10, 11, 20, 22, 34, 35]:
-                    print("aaaaa")
-                    print(path)
-                    list_perimeter = RawList_Points(path, True)
-                    print(list_perimeter)
-                    trace_layer(fig, list_perimeter, z=i)
-                    print("aaaaa")
+            # percorre cada caminho no perímetro da camada. Se o caminho estiver dentro de uma região flexível, ele é dividido em um caminho flexível e um caminho de retração, que são adicionados ao perímetro da camada. Se o caminho não estiver dentro de uma região flexível, ele é adicionado ao perímetro da camada como está
+            if i == 0:
+                FlagPerimeterFirstLayer = True
+                FlagInfillFirstLayer = True
+            else:
+                FlagPerimeterFirstLayer = False
+                FlagInfillFirstLayer = False
 
-                layer.perimeter.append(Raster(path, self.process.flow, self.process.speed)) # noqa: E501
-            for path in infill_paths.geoms:
-                layer.infill.append(Raster(path, self.process.flow, self.process.speed))
+
+            #CAST list of LINESTRINGS to list of Lists (tuples are coords.)
+            for path in list(layer.perimeter_paths.geoms):
+                List_perimeters.append(RawList_Points(path, makeTuple=True))
+
+
+            # List_perimeters[0] -> externo
+            # List_perimeters[1] -> interno
+
+
+            #### --- APPLY FIRST LAYER PERIMETER TO RASTER ---
+            if FlagPerimeterFirstLayer == True: # First layer, adjust the flow
+
+                for p in range(len(List_perimeters)):
+                    List_perimeters[p] = bestPath_Infill2Perimeter(List_perimeters[p], lastLoop_skirt)
+
+                for n in range(len(List_perimeters)):
+                    LinestringPerimeter_perLayer = sp.LineString(List_perimeters[n])
+
+                    layer.perimeter.append(
+                                Raster(LinestringPerimeter_perLayer, self.process.first_layer_flow, self.process.speed))
+                    
+
+            #### --- APPLY OTHER LAYERS PERIMETER TO RASTER ---
+            if FlagPerimeterFirstLayer == False: ### Outras camadas do Perimetro
+
+                for p in range(len(List_perimeters)):
+                    List_perimeters[p] = bestPath_Infill2Perimeter(List_perimeters[p], Last_infillList_previousLayer)
+                
+
+
+                for n in range(len(List_perimeters)):
+
+                    LinestringPerimeter_perLayer = sp.LineString(List_perimeters[n])
+                    layer.perimeter.append(
+                                Raster(LinestringPerimeter_perLayer, self.process.first_layer_flow, self.process.speed))
+
+            ## ---- VISUALIZE perimeter layer ----
+            if i in visualizing_layers:
+                trace_layer(fig, List_perimeters[0], z=i)
+                trace_layer(fig, List_perimeters[1], z=i+0.25)
+
+
+            # Reset Variables
+            FlagPerimeterFirstLayer = False
+
+
+            # Concatenates lists of tuples (INFILL)
+            finalInfillPath_perLayer = RawList_Points(list(infill_paths.geoms)[0], makeTuple=True)
+
+            #### Optimize Infill Path (same layer Perimeter->Infill)
+            finalInfillPath_perLayer = bestPath_Perimeter2Infill(List_perimeters[-1], finalInfillPath_perLayer)
+
+            LinestringInfill_perLayer = sp.LineString(finalInfillPath_perLayer)
+
+            #### --- APPLY FIRST LAYER INFILL TO RASTER ---
+            # Apply to Raster (adiciona ao perímetro da primeira camada como deve ser o fluxo e a velocidade do raster)
+            if FlagInfillFirstLayer == True: # First layer, adjust the flow
+
+                layer.infill.append(
+                            Raster(LinestringInfill_perLayer, self.process.first_layer_flow, self.process.speed))
+
+
+            
+            #### --- APPLY OTHER LAYERS INFILL TO RASTER ---
+            if FlagInfillFirstLayer == False:
+                layer.infill.append(
+                            Raster(LinestringInfill_perLayer, self.process.flow, self.process.speed))
+
+
+            Last_infillList_previousLayer = finalInfillPath_perLayer.copy()
+            ## ---- VISUALIZE infill layer ----
+            if i in visualizing_layers:
+                trace_layer(fig, finalInfillPath_perLayer, z=i+0.5)
+
+        
+
+            FlagInfillFirstLayer = False
+
+            # a camada atual é adicionada ao dicionário "layers" com a chave "height" referente a altura desta camada
             self.layers[height] = layer
-
         fig.show()
+
+    # ----- END OF INFILL ----------
+    
 
     def export_gcode(self, filename):
         if self.process.verbose is True:
