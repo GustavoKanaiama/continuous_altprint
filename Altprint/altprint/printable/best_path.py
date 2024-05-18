@@ -219,14 +219,15 @@ def bestPath_Perimeter2Infill_rotate(List_infill, perimeter_path, List_angles):
         infillPath_Rotation = bestPath_Perimeter2Infill(perimeter_path, List_infill[i])
 
         #Calculate distance for each closest point (by angle rotation)
-        cp = closestPoint(perimeter_path[-1], infillPath_Rotation)
-        dist = cp.distance(sp.Point(perimeter_path[-1]))
+        startPoint = sp.Point(infillPath_Rotation[0])
+        dist = startPoint.distance(sp.Point(perimeter_path[-1]))
 
-        if dist <= min_dist:
+        if dist < min_dist:
             min_dist = dist
             infill_index = i
 
     #Pick the best path from the 2 points(start, end)
+    print("infill index: ",infill_index)
     bestInfill = bestPath_Perimeter2Infill(perimeter_path, List_infill[infill_index])
 
     return bestInfill, List_angles[i]
