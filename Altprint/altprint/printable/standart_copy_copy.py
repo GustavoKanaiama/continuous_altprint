@@ -67,7 +67,7 @@ class StandartPrint(BasePrint):
     def make_layers(self):  # método que gera as trajetórias das camadas, desde a saia inicial, e o perímetro/contorno e o preenchimento de cada camada
         fig = go.Figure()
 
-        visualizing_layers = [0, 1, 10, 15]
+        visualizing_layers = [3]
 
 
         if self.process.verbose is True:  # linha de verificação fornecida dentro das configurações do próprio arquivo yml
@@ -238,14 +238,21 @@ class StandartPrint(BasePrint):
                     infill_path = infill_method.generate_infill(layer,
                                                             self.process.raster_gap,
                                                             angle)
+                    if i in visualizing_layers:
+                        print(list(infill_path.geoms))
+                        #print(RawList_MultiPoints(list(infill_path.geoms)[0], makeTuple=True))
 
                     Infill_perAngle.append(RawList_Points(list(infill_path.geoms)[0], makeTuple=True))
                 
+                infilp = RawList_Points(list(infill_path.geoms)[0], makeTuple=True)
+                if i in visualizing_layers:
+                    trace_layer(fig, infilp, z=i+0.5)
+                    #print(infilp)
+
+
                 #Now able to see the bestAngle variable (not currently used)
-                print("Camada: ", i)
                 finalInfillPath_perLayer, bestAngle = bestPath_Perimeter2Infill_rotate(Infill_perAngle, List_perimeters[-1], List_angles)
-                print()
-                print()
+
                 LinestringInfill_perLayer = sp.LineString(finalInfillPath_perLayer)
 
                 layer.infill.append(
@@ -254,8 +261,8 @@ class StandartPrint(BasePrint):
 
             Last_infillList_previousLayer = finalInfillPath_perLayer.copy()
             ## ---- VISUALIZE infill layer ----
-            if i in visualizing_layers:
-                trace_layer(fig, finalInfillPath_perLayer, z=i+0.5)
+            #if i in visualizing_layers:
+                #trace_layer(fig, finalInfillPath_perLayer, z=i+0.5)
 
         
 

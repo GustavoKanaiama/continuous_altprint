@@ -115,6 +115,15 @@ def RawList_Points(linestring, makeTuple=False):
     return listRaw_Points
 
 
+def RawList_MultiPoints(multilinestring, makeTuple=False):
+    # Only if the list is a multilinestring objects
+
+    listRaw_MultiPoints = []
+    for i in range(multilinestring.length):
+        listRaw_MultiPoints.append(RawList_Points(multilinestring[i], makeTuple=makeTuple))
+    
+    return listRaw_MultiPoints
+
 def perimeterPath_byPoint(startPoint, rawList_perimeterPoints, clockwise=True):
     #startPoint is a POINT object
 
@@ -227,7 +236,6 @@ def bestPath_Perimeter2Infill_rotate(List_infill, perimeter_path, List_angles):
             infill_index = i
 
     #Pick the best path from the 2 points(start, end)
-    print("infill index: ",infill_index)
     bestInfill = bestPath_Perimeter2Infill(perimeter_path, List_infill[infill_index])
 
     return bestInfill, List_angles[i]
