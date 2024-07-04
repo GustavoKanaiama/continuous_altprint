@@ -238,4 +238,4 @@ def bestPath_Perimeter2Infill_rotate(List_infill, perimeter_path, List_angles):
     #Pick the best path from the 2 points(start, end)
     bestInfill = bestPath_Perimeter2Infill(perimeter_path, List_infill[infill_index])
 
-    return bestInfill, List_angles[i]
+    return bestInfill, i

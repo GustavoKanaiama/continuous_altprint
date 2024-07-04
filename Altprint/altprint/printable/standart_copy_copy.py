@@ -67,7 +67,7 @@ class StandartPrint(BasePrint):
     def make_layers(self):  # método que gera as trajetórias das camadas, desde a saia inicial, e o perímetro/contorno e o preenchimento de cada camada
         fig = go.Figure()
 
-        visualizing_layers = [3]
+        visualizing_layers = [0, 1]
 
 
         if self.process.verbose is True:  # linha de verificação fornecida dentro das configurações do próprio arquivo yml
@@ -196,80 +196,60 @@ class StandartPrint(BasePrint):
 
             # Reset Variables
             FlagPerimeterFirstLayer = False
-            InfillPath_byAngle = []
-
-            #angle treatment for standartProcess
-            List_angles = self.process.infill_angle
-
-            for angle in range(len(List_angles)):
-                #append all possible infillPaths for each angle
-                
-                infill_paths = infill_method.generate_infill(layer,
-                                            self.process.raster_gap,
-                                            List_angles[angle])
-                
-                InfillPath_byAngle.append(RawList_Points(list(infill_paths.geoms)[0], makeTuple=True))
-
-            #### Optimize Infill Path (same layer Perimeter->Infill)
-            finalInfillPath_perLayer, bestAngle = bestPath_Perimeter2Infill_rotate(InfillPath_byAngle, List_perimeters[-1], List_angles)
-
-            LinestringInfill_perLayer = sp.LineString(finalInfillPath_perLayer)
-
-            #### --- APPLY FIRST LAYER INFILL TO RASTER ---
-            # Apply to Raster (adiciona ao perímetro da primeira camada como deve ser o fluxo e a velocidade do raster)
-            if FlagInfillFirstLayer == True: # First layer, adjust the flow
-
-                layer.infill.append(
-                            Raster(LinestringInfill_perLayer, self.process.first_layer_flow, self.process.speed))
-
 
             
+            if type(self.process.infill_angle) == list:
+                infill_angle = self.process.infill_angle[i%len(self.process.infill_angle)]
+            else:
+                infill_angle = self.process.infill_angle
+            infill_paths = infill_method.generate_infill(layer,
+                                                         self.process.raster_gap,
+                                                         infill_angle)
+            
+
+            #### --- APPLY FIRST LAYER INFILL TO RASTER ---
+            
+            if FlagInfillFirstLayer == True: # First layer, adjust the flow
+
+                # Apply to Raster (adiciona ao perímetro da primeira camada como deve ser o fluxo e a velocidade do raster)
+
+                for infillLinestr in list(infill_paths.geoms):
+
+                    raw_infillPath = RawList_Points(infillLinestr, makeTuple=True)
+
+                    finalInfillPath_perLayer = bestPath_Perimeter2Infill(List_perimeters[-1], raw_infillPath)
+                    LinestringInfill_perLayer = sp.LineString(finalInfillPath_perLayer)
+                    layer.infill.append(
+                            Raster(LinestringInfill_perLayer, self.process.first_layer_flow, self.process.speed))
+                    if i in visualizing_layers:
+                        trace_layer(fig, finalInfillPath_perLayer, z=i+0.5)
+                        print(finalInfillPath_perLayer)
+                        
+
+
             #### --- APPLY OTHER LAYERS INFILL TO RASTER ---
             if FlagInfillFirstLayer == False:
 
-                Infill_perAngle = []
+                for infillLinestr in list(infill_paths.geoms):
 
-                #### OPTMIZE angle due to previous perimeter layer (e.g. decide if the best angle is 90º or 0º)
+                    raw_infillPath = RawList_Points(infillLinestr, makeTuple=True)
 
-                List_angles = self.process.infill_angle
-
-                for angle in List_angles: #angle list
-
-                    infill_path = infill_method.generate_infill(layer,
-                                                            self.process.raster_gap,
-                                                            angle)
+                    finalInfillPath_perLayer = bestPath_Perimeter2Infill(List_perimeters[-1], raw_infillPath)
+                    LinestringInfill_perLayer = sp.LineString(finalInfillPath_perLayer)
+                    layer.infill.append(
+                            Raster(LinestringInfill_perLayer, self.process.first_layer_flow, self.process.speed))
                     if i in visualizing_layers:
-                        print(list(infill_path.geoms))
-                        #print(RawList_MultiPoints(list(infill_path.geoms)[0], makeTuple=True))
+                        trace_layer(fig, finalInfillPath_perLayer, z=i+0.5)
 
-                    Infill_perAngle.append(RawList_Points(list(infill_path.geoms)[0], makeTuple=True))
-                
-                infilp = RawList_Points(list(infill_path.geoms)[0], makeTuple=True)
-                if i in visualizing_layers:
-                    trace_layer(fig, infilp, z=i+0.5)
-                    #print(infilp)
-
-
-                #Now able to see the bestAngle variable (not currently used)
-                finalInfillPath_perLayer, bestAngle = bestPath_Perimeter2Infill_rotate(Infill_perAngle, List_perimeters[-1], List_angles)
-
-                LinestringInfill_perLayer = sp.LineString(finalInfillPath_perLayer)
-
-                layer.infill.append(
-                            Raster(LinestringInfill_perLayer, self.process.flow, self.process.speed))
 
 
             Last_infillList_previousLayer = finalInfillPath_perLayer.copy()
-            ## ---- VISUALIZE infill layer ----
-            #if i in visualizing_layers:
-                #trace_layer(fig, finalInfillPath_perLayer, z=i+0.5)
-
-        
 
             FlagInfillFirstLayer = False
 
             # a camada atual é adicionada ao dicionário "layers" com a chave "height" referente a altura desta camada
             self.layers[height] = layer
+        
         fig.show()
 
     # ----- END OF INFILL ----------

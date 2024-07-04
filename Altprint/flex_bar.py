@@ -1,4 +1,4 @@
-from altprint.printable.standart_copy_copy import StandartPrint, StandartProcess
+from altprint.printable.standart import StandartPrint, StandartProcess
 
 import os
 
@@ -6,10 +6,10 @@ import os
 # os.chdir("D:\códigosVScode\Altprint")
 
 # Para Stavo notebook
-#os.chdir("C:/Users/gusta/OneDrive/Documentos/GitHub/continuous_altprint-1/Altprint")
+os.chdir("C:/Users/gusta/OneDrive/Documentos/GitHub/continuous_altprint/Altprint")
 
 # Para Stavo PC
-os.chdir("C:/Users/Gustavo Mariano/Documents/Github/continuous_altprint/Altprint")
+#os.chdir("C:/Users/Gustavo Mariano/Documents/Github/continuous_altprint/Altprint")
 
 
 process = StandartProcess(settings_file='cube.yml')

@@ -6,6 +6,10 @@ from altprint.infill.rectilinear_infill import RectilinearInfill
 from altprint.gcode import GcodeExporter
 from altprint.settingsparser import SettingsParser
 
+from altprint.makeNewTest import trace_layer
+import plotly.graph_objects as go
+from altprint.printable.best_path import *
+
 class StandartProcess():
     def __init__(self, **kwargs):
         prop_defaults = {
@@ -60,6 +64,8 @@ class StandartPrint(BasePrint):
         self.heights = self.sliced_planes.get_heights()
 
     def make_layers(self):
+        fig = go.Figure()
+
         if self.process.verbose is True:
             print("generating layers ...")
         infill_method = self.process.infill_method()
@@ -93,9 +99,27 @@ class StandartPrint(BasePrint):
 
             for path in layer.perimeter_paths.geoms:
                 layer.perimeter.append(Raster(path, self.process.flow, self.process.speed)) # noqa: E501
-            for path in infill_paths.geoms:
+            for path in infill_paths.geoms:               
                 layer.infill.append(Raster(path, self.process.flow, self.process.speed))
+
+
+            if i == 0 or i == 1:
+                for perimeterLinestr in list(layer.perimeter_paths.geoms):
+
+                    raw_perimeterPath = RawList_Points(perimeterLinestr, makeTuple=True)
+                    trace_layer(fig, raw_perimeterPath, z=i+0.25)
+                    
+
+
+                for infillLinestr in list(infill_paths.geoms):
+
+                    raw_infillPath = RawList_Points(infillLinestr, makeTuple=True)
+                    print(raw_infillPath)
+                    trace_layer(fig, raw_infillPath, z=i+0.5)
+                    
+
             self.layers[height] = layer
+        fig.show()
 
     def export_gcode(self, filename):
         if self.process.verbose is True:
