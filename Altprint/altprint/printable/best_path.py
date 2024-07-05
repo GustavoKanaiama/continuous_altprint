@@ -1,4 +1,5 @@
 import shapely as sp
+from itertools import permutations
 #import matplotlib.pyplot as plt
 #import geopandas as gpd
 
@@ -239,3 +240,34 @@ def bestPath_Perimeter2Infill_rotate(List_infill, perimeter_path, List_angles):
     bestInfill = bestPath_Perimeter2Infill(perimeter_path, List_infill[infill_index])
 
     return bestInfill, i
+
+def searchAndSplit(raw_list, raw_point, order=1):
+    #->function that split list by the closest 'reference point', them create 2 lists(main list splitted)
+    #-> the 'order' variable drive the order of lists, if the result will be [list1, list2] or [list2, list1] (maybe kind of useless)
+
+    RefPoint = sp.Point(raw_point)
+    min_dist = 9999999
+    closest_point = 0
+
+    for pt in raw_list:
+
+        pt = sp.Point(pt)
+
+        if pt.distance(RefPoint) <= min_dist:
+            min_dist = pt.distance(RefPoint)
+            closest_point = pt
+
+    closest_point = list(closest_point.coords)[0]
+    
+    if order == 1:
+        list1 = raw_list[:raw_list.index(closest_point)]
+        list2 = raw_list[raw_list.index(closest_point):] #closest_point na lista2
+
+    if order == 0:
+        list1 = raw_list[:raw_list.index(closest_point)+1]#closest_point na lista1
+        list2 = raw_list[raw_list.index(closest_point)-1:]
+
+    return list1, list2
+
+
+
