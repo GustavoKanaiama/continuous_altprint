@@ -159,7 +159,7 @@ class StandartPrint(BasePrint):
 
             # List_perimeters[0] -> externo
             # List_perimeters[1] -> interno
-
+            lastPointPerimeter = 0
 
             #### --- APPLY FIRST LAYER PERIMETER TO RASTER ---
             if FlagPerimeterFirstLayer == True: # First layer, adjust the flow
@@ -173,7 +173,7 @@ class StandartPrint(BasePrint):
                     layer.perimeter.append(
                                 Raster(LinestringPerimeter_perLayer, self.process.first_layer_flow, self.process.speed))
                     
-
+                    
             #### --- APPLY OTHER LAYERS PERIMETER TO RASTER ---
             if FlagPerimeterFirstLayer == False: ### Outras camadas do Perimetro
 
@@ -186,6 +186,10 @@ class StandartPrint(BasePrint):
                     LinestringPerimeter_perLayer = sp.LineString(List_perimeters[n])
                     layer.perimeter.append(
                                 Raster(LinestringPerimeter_perLayer, self.process.first_layer_flow, self.process.speed))
+            
+
+
+            lastPointPerimeter = List_perimeters[-1][-1]
 
 
             ## ---- VISUALIZE perimeter layer ----
@@ -196,12 +200,14 @@ class StandartPrint(BasePrint):
 
             # Reset Variables
             FlagPerimeterFirstLayer = False
+            List_Infills = []
 
             
             if type(self.process.infill_angle) == list:
                 infill_angle = self.process.infill_angle[i%len(self.process.infill_angle)]
             else:
                 infill_angle = self.process.infill_angle
+
             infill_paths = infill_method.generate_infill(layer,
                                                          self.process.raster_gap,
                                                          infill_angle)
@@ -213,6 +219,17 @@ class StandartPrint(BasePrint):
 
                 # Apply to Raster (adiciona ao perímetro da primeira camada como deve ser o fluxo e a velocidade do raster)
 
+
+                for listInfillLinestr in list(infill_paths.geoms):
+                    for InfillPath in list(listInfillLinestr.coords):
+                        List_Infills.append(RawList_Points(InfillPath, makeTuple=True))
+                #Fazer a lista de linestrings do infill virar uma lista de listas Raw
+                print(List_Infills)
+                print()
+                print()
+                print(lastPointPerimeter)
+
+
                 for infillLinestr in list(infill_paths.geoms):
 
                     raw_infillPath = RawList_Points(infillLinestr, makeTuple=True)
@@ -223,7 +240,7 @@ class StandartPrint(BasePrint):
                             Raster(LinestringInfill_perLayer, self.process.first_layer_flow, self.process.speed))
                     if i in visualizing_layers:
                         trace_layer(fig, finalInfillPath_perLayer, z=i+0.5)
-                        print(finalInfillPath_perLayer)
+
                         
 
 

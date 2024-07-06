@@ -241,33 +241,40 @@ def bestPath_Perimeter2Infill_rotate(List_infill, perimeter_path, List_angles):
 
     return bestInfill, i
 
-def searchAndSplit(raw_list, raw_point, order=1):
+def searchAndSplit(raw_lists, raw_point):
     #->function that split list by the closest 'reference point', them create 2 lists(main list splitted)
-    #-> the 'order' variable drive the order of lists, if the result will be [list1, list2] or [list2, list1] (maybe kind of useless)
 
     RefPoint = sp.Point(raw_point)
     min_dist = 9999999
     closest_point = 0
+    mainList = []
+    Index_counter = 0
+    Index_list = 0
 
-    for pt in raw_list:
+    for raw_list in raw_lists: #Find the closest point in a list of lists
+        for pt in raw_list:
 
-        pt = sp.Point(pt)
+            pt = sp.Point(pt)
 
-        if pt.distance(RefPoint) <= min_dist:
-            min_dist = pt.distance(RefPoint)
-            closest_point = pt
+            if pt.distance(RefPoint) <= min_dist:
+                min_dist = pt.distance(RefPoint)
+                closest_point = pt
+                mainList = raw_list
+                Index_list = Index_counter
+        
+        Index_counter += 1
+            
 
     closest_point = list(closest_point.coords)[0]
-    
-    if order == 1:
-        list1 = raw_list[:raw_list.index(closest_point)]
-        list2 = raw_list[raw_list.index(closest_point):] #closest_point na lista2
 
-    if order == 0:
-        list1 = raw_list[:raw_list.index(closest_point)+1]#closest_point na lista1
-        list2 = raw_list[raw_list.index(closest_point)-1:]
+    list1 = mainList[:mainList.index(closest_point)]
+    list2 = mainList[mainList.index(closest_point):]
 
-    return list1, list2
+    raw_lists.pop(Index_list) #Delete the old list that was splitted
+    raw_lists.insert(0, list1)  #Add the splitted vesions in the beggining of the array
+    raw_lists.insert(0, list2)
+
+    return raw_lists
 
 
 

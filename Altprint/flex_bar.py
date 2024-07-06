@@ -1,4 +1,4 @@
-from altprint.printable.standart import StandartPrint, StandartProcess
+from altprint.printable.standart_infillSlicer import StandartPrint, StandartProcess
 
 import os
 
