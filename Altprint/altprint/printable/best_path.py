@@ -271,8 +271,19 @@ def searchAndSplit(raw_lists, raw_point):
     list2 = mainList[mainList.index(closest_point):]
 
     raw_lists.pop(Index_list) #Delete the old list that was splitted
-    raw_lists.insert(0, list1)  #Add the splitted vesions in the beggining of the array
-    raw_lists.insert(0, list2)
+
+    if len(list1) == 1:
+        list2.append(list1.pop())
+    
+    if len(list2) == 1:
+        list1.append(list2.pop())
+
+
+    if list1 != []:
+        raw_lists.insert(0, list1)  #Add the splitted vesions in the beggining of the array
+    
+    if list2 != []:
+        raw_lists.insert(0, list2)
 
     return raw_lists
 

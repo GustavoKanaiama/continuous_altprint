@@ -220,26 +220,19 @@ class StandartPrint(BasePrint):
                 # Apply to Raster (adiciona ao perímetro da primeira camada como deve ser o fluxo e a velocidade do raster)
 
 
-                for listInfillLinestr in list(infill_paths.geoms):
-                    for InfillPath in list(listInfillLinestr.coords):
-                        List_Infills.append(RawList_Points(InfillPath, makeTuple=True))
-                #Fazer a lista de linestrings do infill virar uma lista de listas Raw
-                print(List_Infills)
-                print()
-                print()
-                print(lastPointPerimeter)
+                for InfillPath in list(infill_paths.geoms):
+                    List_Infills.append(RawList_Points(InfillPath, makeTuple=True))
+
+                #Fazer a lista de linestrings do infill virar uma listas Raw
+                Infill_RawList = searchAndSplit(List_Infills, lastPointPerimeter)
 
 
-                for infillLinestr in list(infill_paths.geoms):
-
-                    raw_infillPath = RawList_Points(infillLinestr, makeTuple=True)
-
-                    finalInfillPath_perLayer = bestPath_Perimeter2Infill(List_perimeters[-1], raw_infillPath)
-                    LinestringInfill_perLayer = sp.LineString(finalInfillPath_perLayer)
+                for raw_infillPath in Infill_RawList:
+                    LinestringInfill_perLayer = sp.LineString(raw_infillPath)
                     layer.infill.append(
                             Raster(LinestringInfill_perLayer, self.process.first_layer_flow, self.process.speed))
                     if i in visualizing_layers:
-                        trace_layer(fig, finalInfillPath_perLayer, z=i+0.5)
+                        trace_layer(fig, raw_infillPath, z=i+0.5)
 
                         
 
@@ -247,20 +240,26 @@ class StandartPrint(BasePrint):
             #### --- APPLY OTHER LAYERS INFILL TO RASTER ---
             if FlagInfillFirstLayer == False:
 
-                for infillLinestr in list(infill_paths.geoms):
+                for InfillPath in list(infill_paths.geoms):
+                    List_Infills.append(RawList_Points(InfillPath, makeTuple=True))
 
-                    raw_infillPath = RawList_Points(infillLinestr, makeTuple=True)
 
-                    finalInfillPath_perLayer = bestPath_Perimeter2Infill(List_perimeters[-1], raw_infillPath)
-                    LinestringInfill_perLayer = sp.LineString(finalInfillPath_perLayer)
+                Infill_RawList = searchAndSplit(List_Infills, lastPointPerimeter)
+                
+                if i ==1:
+                    for k in Infill_RawList:
+                        print(k)
+                        print()
+
+                for raw_infillPath in Infill_RawList:
+                    LinestringInfill_perLayer = sp.LineString(raw_infillPath)
                     layer.infill.append(
                             Raster(LinestringInfill_perLayer, self.process.first_layer_flow, self.process.speed))
                     if i in visualizing_layers:
-                        trace_layer(fig, finalInfillPath_perLayer, z=i+0.5)
+                        trace_layer(fig, raw_infillPath, z=i+0.5)
 
 
-
-            Last_infillList_previousLayer = finalInfillPath_perLayer.copy()
+            Last_infillList_previousLayer = raw_infillPath.copy()
 
             FlagInfillFirstLayer = False
 
