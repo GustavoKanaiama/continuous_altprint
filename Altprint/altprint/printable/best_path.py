@@ -267,8 +267,8 @@ def searchAndSplit(raw_lists, raw_point):
 
     closest_point = list(closest_point.coords)[0]
 
-    list1 = mainList[:mainList.index(closest_point)]
-    list2 = mainList[mainList.index(closest_point):]
+    list1 = mainList[:mainList.index(closest_point)+1]
+    list2 = mainList[mainList.index(closest_point)-1:]
 
     raw_lists.pop(Index_list) #Delete the old list that was splitted
 
@@ -285,7 +285,7 @@ def searchAndSplit(raw_lists, raw_point):
     if list2 != []:
         raw_lists.insert(0, list2)
 
-    return raw_lists
+    return raw_lists, closest_point
 
 
 

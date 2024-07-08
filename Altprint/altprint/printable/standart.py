@@ -103,7 +103,7 @@ class StandartPrint(BasePrint):
                 layer.infill.append(Raster(path, self.process.flow, self.process.speed))
 
 
-            if i == 0 or i == 1:
+            if i == 2:
                 for perimeterLinestr in list(layer.perimeter_paths.geoms):
 
                     raw_perimeterPath = RawList_Points(perimeterLinestr, makeTuple=True)
@@ -115,6 +115,7 @@ class StandartPrint(BasePrint):
 
                     raw_infillPath = RawList_Points(infillLinestr, makeTuple=True)
                     print(raw_infillPath)
+                    print()
                     trace_layer(fig, raw_infillPath, z=i+0.5)
                     
 

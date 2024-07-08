@@ -195,7 +195,7 @@ class StandartPrint(BasePrint):
             ## ---- VISUALIZE perimeter layer ----
             if i in visualizing_layers:
                 trace_layer(fig, List_perimeters[0], z=i)
-                trace_layer(fig, List_perimeters[1], z=i+0.25)
+                trace_layer(fig, List_perimeters[1], z=i)
 
 
             # Reset Variables
@@ -224,7 +224,7 @@ class StandartPrint(BasePrint):
                     List_Infills.append(RawList_Points(InfillPath, makeTuple=True))
 
                 #Fazer a lista de linestrings do infill virar uma listas Raw
-                Infill_RawList = searchAndSplit(List_Infills, lastPointPerimeter)
+                Infill_RawList, cp = searchAndSplit(List_Infills, lastPointPerimeter)
 
 
                 for raw_infillPath in Infill_RawList:
@@ -232,7 +232,7 @@ class StandartPrint(BasePrint):
                     layer.infill.append(
                             Raster(LinestringInfill_perLayer, self.process.first_layer_flow, self.process.speed))
                     if i in visualizing_layers:
-                        trace_layer(fig, raw_infillPath, z=i+0.5)
+                        trace_layer(fig, raw_infillPath, z=i+0.3)
 
                         
 
@@ -244,10 +244,12 @@ class StandartPrint(BasePrint):
                     List_Infills.append(RawList_Points(InfillPath, makeTuple=True))
 
 
-                Infill_RawList = searchAndSplit(List_Infills, lastPointPerimeter)
+                Infill_RawList, cp = searchAndSplit(List_Infills, lastPointPerimeter)
                 
-                if i ==1:
+                if i ==2:
                     for k in Infill_RawList:
+                        print("Closest point: ", cp)
+                        print()
                         print(k)
                         print()
 
