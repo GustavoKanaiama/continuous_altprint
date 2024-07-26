@@ -103,7 +103,7 @@ class StandartPrint(BasePrint):
                 layer.infill.append(Raster(path, self.process.flow, self.process.speed))
 
 
-            if i == 2:
+            if i == 9:
                 for perimeterLinestr in list(layer.perimeter_paths.geoms):
 
                     raw_perimeterPath = RawList_Points(perimeterLinestr, makeTuple=True)

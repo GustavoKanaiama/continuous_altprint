@@ -267,8 +267,8 @@ def searchAndSplit(raw_lists, raw_point):
 
     closest_point = list(closest_point.coords)[0]
 
-    list1 = mainList[:mainList.index(closest_point)+1]
-    list2 = mainList[mainList.index(closest_point)-1:]
+    list1 = mainList[:mainList.index(closest_point)]
+    list2 = mainList[mainList.index(closest_point):]
 
     raw_lists.pop(Index_list) #Delete the old list that was splitted
 
@@ -288,4 +288,59 @@ def searchAndSplit(raw_lists, raw_point):
     return raw_lists, closest_point
 
 
+def searchAndSplit_alt(raw_lists, raw_point):
+    #->function that split list by the closest 'reference point', them create 2 lists(main list splitted)
+
+    RefPoint = sp.Point(raw_point)
+    min_dist = 9999999
+    closest_point = 0
+    mainList = []
+    Index_counter = 0
+    Index_list = 0
+
+    for raw_list in raw_lists: #Find the closest point in a list of lists
+        for pt in raw_list:
+
+            pt = sp.Point(pt)
+
+            if pt.distance(RefPoint) <= min_dist:
+                min_dist = pt.distance(RefPoint)
+                closest_point = pt
+                mainList = raw_list
+                Index_list = Index_counter
+        
+        Index_counter += 1
+            
+
+    closest_point = list(closest_point.coords)[0]
+
+    #Check if the 'list1' and 'list2' have *at least* lenght = 2
+
+    list1 = mainList[:mainList.index(closest_point)]
+    list2 = mainList[mainList.index(closest_point)-1:]
+
+    if (len(list1) <= 1) or (len(list2) <= 1):
+        list1 = mainList[:mainList.index(closest_point)+1]
+        list2 = mainList[mainList.index(closest_point):]
+
+        if (len(list1) <= 1) or (len(list2) <= 1):
+            list1 = mainList[:mainList.index(closest_point)-1]
+            list2 = mainList[mainList.index(closest_point)-2:]
+
+    raw_lists.pop(Index_list) #Delete the old list that was splitted
+
+    if len(list1) == 1:
+        list2.append(list1.pop())
+    
+    if len(list2) == 1:
+        list1.append(list2.pop())
+
+
+    if list1 != []:
+        raw_lists.insert(0, list1)  #Add the splitted vesions in the beggining of the array
+    
+    if list2 != []:
+        raw_lists.insert(0, list2)
+
+    return raw_lists, closest_point
 

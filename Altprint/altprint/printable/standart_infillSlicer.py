@@ -67,7 +67,7 @@ class StandartPrint(BasePrint):
     def make_layers(self):  # método que gera as trajetórias das camadas, desde a saia inicial, e o perímetro/contorno e o preenchimento de cada camada
         fig = go.Figure()
 
-        visualizing_layers = [0, 1]
+        visualizing_layers = [9]
 
 
         if self.process.verbose is True:  # linha de verificação fornecida dentro das configurações do próprio arquivo yml
@@ -224,7 +224,7 @@ class StandartPrint(BasePrint):
                     List_Infills.append(RawList_Points(InfillPath, makeTuple=True))
 
                 #Fazer a lista de linestrings do infill virar uma listas Raw
-                Infill_RawList, cp = searchAndSplit(List_Infills, lastPointPerimeter)
+                Infill_RawList, cp = searchAndSplit_alt(List_Infills, lastPointPerimeter)
 
 
                 for raw_infillPath in Infill_RawList:
@@ -244,9 +244,9 @@ class StandartPrint(BasePrint):
                     List_Infills.append(RawList_Points(InfillPath, makeTuple=True))
 
 
-                Infill_RawList, cp = searchAndSplit(List_Infills, lastPointPerimeter)
+                Infill_RawList, cp = searchAndSplit_alt(List_Infills, lastPointPerimeter)
                 
-                if i ==2:
+                if i == 2:
                     for k in Infill_RawList:
                         print("Closest point: ", cp)
                         print()
