@@ -151,11 +151,12 @@ class StandartPrint(BasePrint):
                 FlagPerimeterFirstLayer = False
                 FlagInfillFirstLayer = False
 
-
             #CAST list of LINESTRINGS to list of Lists (tuples are coords.)
             for path in list(layer.perimeter_paths.geoms):
+                if i ==0:
+                    print()
+                    print(path)
                 List_perimeters.append(RawList_Points(path, makeTuple=True))
-
 
             # List_perimeters[0] -> externo
             # List_perimeters[1] -> interno
@@ -202,7 +203,7 @@ class StandartPrint(BasePrint):
             FlagPerimeterFirstLayer = False
             List_Infills = []
 
-            
+
             if type(self.process.infill_angle) == list:
                 infill_angle = self.process.infill_angle[i%len(self.process.infill_angle)]
             else:
@@ -245,13 +246,6 @@ class StandartPrint(BasePrint):
 
 
                 Infill_RawList, cp = searchAndSplit_alt(List_Infills, lastPointPerimeter)
-                
-                if i == 2:
-                    for k in Infill_RawList:
-                        print("Closest point: ", cp)
-                        print()
-                        print(k)
-                        print()
 
                 for raw_infillPath in Infill_RawList:
                     LinestringInfill_perLayer = sp.LineString(raw_infillPath)
@@ -268,7 +262,7 @@ class StandartPrint(BasePrint):
             # a camada atual é adicionada ao dicionário "layers" com a chave "height" referente a altura desta camada
             self.layers[height] = layer
         
-        fig.show()
+        #fig.show()
 
     # ----- END OF INFILL ----------
     

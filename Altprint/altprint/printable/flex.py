@@ -7,6 +7,8 @@ from altprint.gcode import GcodeExporter
 from altprint.lineutil import split_by_regions, retract
 from altprint.settingsparser import SettingsParser
 
+from altprint.printable.best_path import *
+
 
 
 class FlexProcess():  # definição da classe responsável por controlar os parâmetros de impressão
@@ -104,7 +106,6 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                       self.process.overlap)
         # utiliza o método da classe "Layer" para criação do perímetro formado pela saia
         skirt.make_perimeter()
-
         # loop que percorre todas as alturas na lista "heights". A função enumerate é usada para obter tanto o índice (i) quanto o valor (height) de cada altura.
         for i, height in enumerate(self.heights):
             # para cada altura, é criado um novo objeto "Layer", que recebe os parãmetros referentes ao perímetro fornecidos pelo arquivo yml, e atribuído a "layer" que é referente a cada camada
@@ -132,10 +133,19 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
             # Se "flex_regions" não for uma lista, ele é convertido em uma lista
             if not type(flex_regions) == list:  # noqa: E721
                 flex_regions = list(flex_regions.geoms)
+
             # Os caminhos do perímetro da camada são divididos pelas regiões flexíveis
+
             layer.perimeter_paths = split_by_regions(layer.perimeter_paths, flex_regions)  # noqa: E501
             # Os caminhos de preenchimento também são divididos pelas regiões flexíveis
-            infill_paths = split_by_regions(infill_paths, flex_regions)
+            #infill_paths = split_by_regions(infill_paths, flex_regions)
+
+            if i == 0:
+                #print("Perimeter geom")
+                #for k in layer.perimeter_paths.geoms: print(k)
+                print()
+                print("Infill geom")
+                for k in infill_paths.geoms: print(k)
 
             # Se esta for a primeira iteração do loop (ou seja, se estamos na primeira camada), os caminhos do perímetro da saia são adicionados ao perímetro da camada
             if i == 0:  # skirt
@@ -144,7 +154,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                     layer.perimeter.append(
                         Raster(path, self.process.first_layer_flow, self.process.speed))
 
-            # percorre cada caminho no perímetro da camada. Se o caminho estiver dentro de uma região flexível, ele é dividido em um caminho flexível e um caminho de retração, que são adicionados ao perímetro da camada. Se o caminho não estiver dentro de uma região flexível, ele é adicionado ao perímetro da camada como está
+            # percorre cada caminho no perímetro da camada. Se o caminho estiver dentro de uma região flexível, ele é dividido em um caminho flexível e um caminho de retração, que são adicionados ao perímetro da camada. Se o caminho não estiver dentro de uma região flexível, ele é adicionado ao perímetro da camada como está    
             for path in layer.perimeter_paths.geoms:
                 flex_path = False
 
@@ -161,17 +171,9 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                         # adiciona ao perímetro da primeira camada como deve ser o fluxo e a velocidade do raster
                         layer.perimeter.append(
                             Raster(path, self.process.first_layer_flow, self.process.speed))
-                        
-                        #print(path)
 
                     else:  # para as demais camadas
                         # adiciona ao perímetro da camada como deve ser o fluxo e a velocidade do raster
-
-                        #Stavo ---- 
-                        #if i == 2:
-                            #print(i, path)
-                        #Stavo ---- 
-
                         layer.perimeter.append(
                             Raster(path, self.process.flow, self.process.speed))
 

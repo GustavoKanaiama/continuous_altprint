@@ -109,17 +109,21 @@ def RawList_Points(linestring, makeTuple=False):
         if makeTuple == True:
             listRaw_Points.append(linestr)
     
-    if makeTuple == False:
-        for coord in list_linestr:
-            listRaw_Points.append(coord)
+        if makeTuple == False:
+            for coord in list_linestr:
+                listRaw_Points.append(coord)
 
     return listRaw_Points
-
+#teste = sp.LineString([[100.25, 125], [100.25, 139.75], [109.75, 139.75], [109.75, 125]])
+#print(teste)
+#print(RawList_Points(teste, makeTuple=True))
 
 def RawList_MultiPoints(multilinestring, makeTuple=False):
     # Only if the list is a multilinestring objects
 
     listRaw_MultiPoints = []
+    
+    print(multilinestring.length)
     for i in range(multilinestring.length):
         listRaw_MultiPoints.append(RawList_Points(multilinestring[i], makeTuple=makeTuple))
     
@@ -241,6 +245,50 @@ def bestPath_Perimeter2Infill_rotate(List_infill, perimeter_path, List_angles):
 
     return bestInfill, i
 
+def conc_LoopLinestrings(listLinestrings):
+    """
+    Recebe uma lista de linestrings quebradas (splited_by_regions) e concatena elas até fazer um loop, e assim por diante.
+    No final temos listas de linestrings, cada lista representa o conjunto de linestrings que completam um loop.
+    """
+    conc_linestrings = []
+    buffer_list = []
+
+    Flag_first_point = True
+
+    for linestring in listLinestrings:
+        raw_linestring = RawList_Points(linestring, makeTuple=True)
+
+        #print("raw_linestring", raw_linestring)
+        for point in raw_linestring:
+
+            if Flag_first_point: #Save first point of the loop
+                first_point = point
+
+                buffer_list.append(point)
+                Flag_first_point = False
+            
+            else: #If it is not the first point..
+
+                buffer_list.append(point)
+
+                if point == first_point:
+                    #Tratando algumas repetições na buffer_list
+                    last_pt = buffer_list.pop()
+                    
+                    seen = set()
+                    seen_add = seen.add
+                    buffer_list = [point for point in buffer_list if not (point in seen or seen_add(point))]
+
+                    buffer_list.append(last_pt)
+
+                    conc_linestrings.append(sp.LineString(buffer_list.copy()))
+
+                    buffer_list = []
+                    Flag_first_point = True
+
+    return conc_linestrings
+
+
 def searchAndSplit(raw_lists, raw_point):
     #->function that split list by the closest 'reference point', them create 2 lists(main list splitted)
 
@@ -343,4 +391,41 @@ def searchAndSplit_alt(raw_lists, raw_point):
         raw_lists.insert(0, list2)
 
     return raw_lists, closest_point
+
+
+def bestPath_Perimeter2Infill_rotateFlex(listPerimeter, n_listInfill, List_angles):
+    
+    best_Infill = []
+    closest_distGreek = "" #"alpha" or "beta"
+    cp = 99999999
+
+    lastPoint_perimeter = sp.Point(listPerimeter[-1])
+    
+    for n_Infill in n_listInfill:
+
+        for angle in List_angles:
+
+            pointAlpha = sp.Point(n_Infill[0])
+            pointBeta = sp.Point(n_Infill[-1])
+
+            distAlpha = lastPoint_perimeter.distance(pointAlpha)
+            distBeta = lastPoint_perimeter.distance(pointBeta)
+
+            if distAlpha <= cp:
+                bestAngle = angle
+                cp = distAlpha
+                closest_distGreek = "alpha"
+
+            if distBeta <= cp:
+                bestAngle = angle
+                cp = distBeta
+                closest_distGreek = "beta"
+
+    best_Infill = n_listInfill[List_angles.index(bestAngle)]
+
+    if closest_distGreek == "beta":
+        best_Infill = best_Infill[::-1]
+
+    
+    return best_Infill
 

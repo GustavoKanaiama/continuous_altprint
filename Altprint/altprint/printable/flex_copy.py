@@ -7,10 +7,8 @@ from altprint.gcode import GcodeExporter
 from altprint.lineutil import split_by_regions, retract
 from altprint.settingsparser import SettingsParser
 
-# -- teste
-import shapely as sp
-
 from altprint.printable.best_path import *
+
 
 
 class FlexProcess():  # definição da classe responsável por controlar os parâmetros de impressão
@@ -93,12 +91,9 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
         self.flex_planes = slicer.slice_model(self.heights)
 
     def make_layers(self):  # método que gera as trajetórias das camadas, desde a saia inicial, e o perímetro/contorno e o preenchimento de cada camada
-
         if self.process.verbose is True:  # linha de verificação fornecida dentro das configurações do próprio arquivo yml
-
             # mensagem quando executa essa função do programa
             print("generating layers ...")
-
         # atribui as configurações dos parâmetros de impressão como um objeto da classe RectilinearInfill
         infill_method = self.process.infill_method()
 
@@ -109,102 +104,17 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                       self.process.skirt_gap,
                       - self.process.skirt_distance - self.process.skirt_gap * self.process.skirt_num,  # noqa: E501
                       self.process.overlap)
-
         # utiliza o método da classe "Layer" para criação do perímetro formado pela saia
         skirt.make_perimeter()
 
-        perimeterPath_perLayer = []
-        infillPath_perLayer = []
-        last_rawList = [0]
-
         # loop que percorre todas as alturas na lista "heights". A função enumerate é usada para obter tanto o índice (i) quanto o valor (height) de cada altura.
         for i, height in enumerate(self.heights):
-
-
             # para cada altura, é criado um novo objeto "Layer", que recebe os parãmetros referentes ao perímetro fornecidos pelo arquivo yml, e atribuído a "layer" que é referente a cada camada
             layer = Layer(self.sliced_planes.planes[height],
                           self.process.perimeter_num,
                           self.process.perimeter_gap,
                           self.process.external_adjust,
                           self.process.overlap)
-            
-            """
-            # ------- BEGIN OF NEXT LAYER -------
-            if (i+1) <= (len(self.heights)-1):
-                nextLayer = Layer(self.sliced_planes.planes[self.heights[i+1]],
-                            self.process.perimeter_num,
-                            self.process.perimeter_gap,
-                            self.process.external_adjust,
-                            self.process.overlap)
-                
-                if nextLayer.shape == []:
-                    self.layers[height] = nextLayer
-                    continue
-
-                nextLayer.make_perimeter()
-                nextLayer.make_infill_border()
-
-                nextFlex_regions = self.flex_planes.planes[self.heights[i+1]]
-
-                # Se "flex_regions" não for uma lista, ele é convertido em uma lista
-                if not type(nextFlex_regions) == list:  # noqa: E721
-                    nextFlex_regions = list(nextFlex_regions.geoms)
-
-                # Os caminhos do perímetro da camada são divididos pelas regiões flexíveis
-                nextLayer.perimeter_paths = split_by_regions(nextLayer.perimeter_paths, nextFlex_regions)
-
-
-                # percorre cada caminho no perímetro da camada. Se o caminho estiver dentro de uma região flexível, ele é dividido em um caminho flexível e um caminho de retração, que são adicionados ao perímetro da camada. Se o caminho não estiver dentro de uma região flexível, ele é adicionado ao perímetro da camada como está
-                for j, path in enumerate(nextLayer.perimeter_paths.geoms):
-
-                    # Merge the same layers LINESTRINGS
-                    if j == 0:
-                        nextRawList = RawList_Points(path, makeTuple=True)
-
-                    else:
-                        # Delete all redundancy from regions (repeated coords.)
-                        nextRawList = RawList_Points(path, makeTuple=True)
-
-                        if i == 1:
-                            print("rawList antes:", nextRawList)
-
-                        if nextRawList[0] == last_rawList[-1]:
-                            nextRawList.pop(0)
-
-                        if i == 1:
-                            print("rawList depois:", nextRawList)
-                            print()
-
-                    perimeterPath_perLayer.append(nextRawList.copy())
-                
-                # Concatenates lists of tuples
-                finalPerimeterPath_perLayer = [coord for sublist in perimeterPath_perLayer for coord in sublist]
-                
-                #Split perimeter
-                List_perimeters = split_PerimeterPath(finalPerimeterPath_perLayer, nextLayer.perimeter_num)
-
-                for n in range(len(List_perimeters)):
-                    Linestring_perLayer = sp.LineString(List_perimeters[n])
-
-                    nextLayer.perimeter.append(
-                                Raster(Linestring_perLayer, self.process.first_layer_flow, self.process.speed))
-                    
-                #print(i, "NextPerimeter Path: ", finalPerimeterPath_perLayer)
-                #print()
-                print()
-                        
-                        
-                # Reset Variables
-                FlagFirstLayer = False
-                perimeterPath_perLayer = []
-                last_rawList = [0]
-
-
-
-            # ---- END OF NEXT LAYER -----
-            """
-
-
             # Se o atributo shape do objeto layer for uma lista vazia, o objeto layer é adicionado ao dicionário "layers" com a chave "height" e o loop continua para a próxima iteração.
             if layer.shape == []:
                 self.layers[height] = layer
@@ -214,211 +124,114 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
             # utiliza o método da classe "Layer" para criação dos limites do preenchimento da camada atual
             layer.make_infill_border()
 
-            # gera os caminhos de preenchimento da camada atual baseado no método da classe "RectilinearInfill" que recebe os parãmetros referentes ao preenchimento fornecidos pelo arquivo yml
-            infill_paths = infill_method.generate_infill(layer,
-                                                         self.process.raster_gap,
-                                                         self.process.infill_angle)
             # define a região flexível na camada atual baseado nos planos que compêm cada camada desta região já definida na função "slice"
             flex_regions = self.flex_planes.planes[height]
 
             # Se "flex_regions" não for uma lista, ele é convertido em uma lista
             if not type(flex_regions) == list:  # noqa: E721
                 flex_regions = list(flex_regions.geoms)
+
             # Os caminhos do perímetro da camada são divididos pelas regiões flexíveis
-            layer.perimeter_paths = split_by_regions(layer.perimeter_paths, flex_regions)  # noqa: E501
+            #layer.perimeter_paths = split_by_regions(layer.perimeter_paths, flex_regions)  # noqa: E501
+
             # Os caminhos de preenchimento também são divididos pelas regiões flexíveis
-            infill_paths = split_by_regions(infill_paths, flex_regions)
+            #infill_paths = split_by_regions(infill_paths, flex_regions)
 
             # Se esta for a primeira iteração do loop (ou seja, se estamos na primeira camada), os caminhos do perímetro da saia são adicionados ao perímetro da camada
+            List_skirt = []
+
             if i == 0:  # skirt
                 for path in skirt.perimeter_paths.geoms:
                     # com raster, faz a saia com os parâmetros fornecidos do arquivo yml
                     layer.perimeter.append(
                         Raster(path, self.process.first_layer_flow, self.process.speed))
-
-            # ----- BEGIN OF PERIMETER ---------
-            NextPerimeter_calculated = False
-            optmizedPerimeterPath_perLayer = []
-            # percorre cada caminho no perímetro da camada. Se o caminho estiver dentro de uma região flexível, ele é dividido em um caminho flexível e um caminho de retração, que são adicionados ao perímetro da camada. Se o caminho não estiver dentro de uma região flexível, ele é adicionado ao perímetro da camada como está
-            for j, path in enumerate(layer.perimeter_paths.geoms):
-
-                if i == 0:  # para a primeira camada
-                    FlagFirstLayer = True
-                    # --- Ignore the "Region" ---
-                    # Merge the same layers LINESTRINGS
-                    
-                    if j == 0:
-                        raw_list = RawList_Points(path, makeTuple=True)
-
-                    else:
-                        # Delete all redundancy from regions (repeated coords.)
-                        raw_list = RawList_Points(path, makeTuple=True)
-
-                        if raw_list[0] == last_rawList[-1]:
-                            raw_list.pop(0)
-                    
-                    last_rawList = raw_list.copy()
-                    #print(raw_list)
-                    #print()
-                    perimeterPath_perLayer.append(raw_list.copy())
-                
-
-                    
-                else:  # para as demais camadas
-                    # Merge the same layers LINESTRINGS
-                    if j == 0:
-                        raw_list = RawList_Points(path, makeTuple=True)
-
-                    else:
-                        # Delete all redundancy from regions (repeated coords.)
-                        raw_list = RawList_Points(path, makeTuple=True)
-
-                        if raw_list[0] == last_rawList[-1]:
-                            raw_list.pop(0)
-
-                    last_rawList = raw_list.copy()
-                    perimeterPath_perLayer.append(raw_list.copy())
+                    List_skirt.append(RawList_Points(path, makeTuple=True))
             
-            # Concatenates lists of tuples
-            finalPerimeterPath_perLayer = [coord for sublist in perimeterPath_perLayer for coord in sublist]
-            
-
-            # Apply to Raster (adiciona ao perímetro da primeira camada como deve ser o fluxo e a velocidade do raster)
-            if FlagFirstLayer == True: # First layer, adjust the flow
-                
-                #Split perimeter
-                List_perimeters = split_PerimeterPath(finalPerimeterPath_perLayer, layer.perimeter_num)
-
-                for n in range(len(List_perimeters)):
-                    Linestring_perLayer = sp.LineString(List_perimeters[n])
-
-                    #print(List_perimeters[n])
-
-                    layer.perimeter.append(
-                                Raster(Linestring_perLayer, self.process.first_layer_flow, self.process.speed))
-                    
-                #print(List_perimeters)
-
-                #print(perimeterPath_byPoint(sp.Point(109.25, 139.25), List_perimeters[-1]))
-                    
-                ####### --- For Regular Perimeters (The same along Z axis)
-
-                regularPerimeter = List_perimeters.copy()
-
-                ####### ---
-                
-                #print(List_perimeters)
-
-            else: #Outras camadas do Perimetro
-                #Split perimeter
-                if NextPerimeter_calculated == True:
-                    
-                    optmizedList_perimeters = split_PerimeterPath(optmizedPerimeterPath_perLayer, layer.perimeter_num)
-
-                    List_perimeters[0] = optmizedList_perimeters.copy()
-
-                    for n in range(len(List_perimeters)):
-                        Linestring_perLayer = sp.LineString(List_perimeters[n])
-
-                        layer.perimeter.append(
-                                    Raster(Linestring_perLayer, self.process.first_layer_flow, self.process.speed))
-                    
-                    print()
-                    print("------")
-                    print(i, "NextPerimeterCalculated: ", List_perimeters)
-                    print("------")
+                lastLoop_skirt = List_skirt[-1]
 
 
+            # -------- BEGIN OF PERIMETER -----------
+            List_perimeters = []
 
-                if NextPerimeter_calculated == False:
-                    print(i, "nao calculou")
-
-                    List_perimeters = split_PerimeterPath(finalPerimeterPath_perLayer, layer.perimeter_num)
-
-                    for n in range(len(List_perimeters)):
-                        Linestring_perLayer = sp.LineString(List_perimeters[n])
-
-                        layer.perimeter.append(
-                                    Raster(Linestring_perLayer, self.process.first_layer_flow, self.process.speed))
-
-
-            # Reset Variables
-            FlagFirstLayer = False
-            perimeterPath_perLayer = []
-            last_rawList = [0]
-
-            # ----- END OF PERIMETER ---------
-
-            # ----- BEGIN OF INFILL ----------
-            # percorre cada caminho no preenchimento da camada. Se o caminho estiver dentro de uma região flexível, ele é dividido em um caminho flexível e um caminho de retração, que são adicionados ao preenchimento da camada. Se o caminho não estiver dentro de uma região flexível, ele é adicionado ao preenchimento da camada como está
-            for k, path in enumerate(infill_paths.geoms):
-
-
-                if i == 0:  # para a primeira camada
-                    FlagFirstLayer = True
-        
-                    # --- Ignore the "Region" ---
-                    
-                    if k == 0:
-                        raw_list = RawList_Points(path, makeTuple=True)
-
-                    else:
-                        # Delete all redundancy from regions (repeated coords.)
-                        raw_list = RawList_Points(path, makeTuple=True)
-
-                        if raw_list[0] == last_rawList[-1]:
-                            raw_list.pop(0)
-
-                    #print(raw_list)
-                    last_rawList = raw_list.copy()
-                    infillPath_perLayer.append(raw_list.copy())
-
-
-                else: # Para outras camadas
-                    # Merge the same layers LINESTRINGS
-                    if k == 0:
-                        raw_list = RawList_Points(path, makeTuple=True)
-
-                    else:
-                        # Delete all redundancy from regions (repeated coords.)
-                        raw_list = RawList_Points(path, makeTuple=True)
-
-                        if raw_list[0] == last_rawList[-1]:
-                            raw_list.pop(0)
-
-                    last_rawList = raw_list.copy()
-                    infillPath_perLayer.append(raw_list.copy())
-
-
-            # Concatenates lists of tuples
-            finalInfillPath_perLayer = [coord for sublist in infillPath_perLayer for coord in sublist]
-            Linestring_perLayer = sp.LineString(finalInfillPath_perLayer)
-
-            # Apply to Raster (adiciona ao perímetro da primeira camada como deve ser o fluxo e a velocidade do raster)
-            if FlagFirstLayer == True: # First layer, adjust the flow
-                layer.perimeter.append(
-                            Raster(Linestring_perLayer, self.process.first_layer_flow, self.process.speed))
-                
-                optmizedPerimeterPath_perLayer = bestPath_Infill2Perimeter(regularPerimeter[0], finalInfillPath_perLayer)
-                NextPerimeter_calculated = True
-
-                #print("Infill linestring: ", finalInfillPath_perLayer)
-                
+            if i == 0:
+                FlagPerimeterFirstLayer = True
+                FlagInfillFirstLayer = True
             else:
-                layer.perimeter.append(
-                            Raster(Linestring_perLayer, self.process.flow, self.process.speed))
-                
-                optmizedPerimeterPath_perLayer = bestPath_Infill2Perimeter(regularPerimeter[0], finalInfillPath_perLayer)
-                NextPerimeter_calculated = True
-                print(NextPerimeter_calculated)
+                FlagPerimeterFirstLayer = False
+                FlagInfillFirstLayer = False
 
-            FlagFirstLayer = False
-            infillPath_perLayer = []
 
+            for path in split_by_regions(layer.perimeter_paths, flex_regions).geoms:
+                flex_path = False
+
+                for region in flex_regions:  # para a região flexível
+                    if path.within(region.buffer(0.01, join_style=2)):
+                        flex_path, retract_path = retract(path, self.process.retract_ratio)  # noqa: E501
+                        layer.perimeter.append(Raster(flex_path, self.process.flex_flow, self.process.flex_speed))  # noqa: E501
+                        layer.perimeter.append(Raster(retract_path, self.process.retract_flow, self.process.retract_speed))  # noqa: E501
+                        flex_path = True
+                        break
+
+                if not flex_path:  # para a região normal
+                    if i == 0:  # para a primeira camada
+                        # adiciona ao perímetro da primeira camada como deve ser o fluxo e a velocidade do raster
+                        layer.perimeter.append(
+                            Raster(path, self.process.first_layer_flow, self.process.speed))
+
+                    else:  # para as demais camadas
+                        # adiciona ao perímetro da camada como deve ser o fluxo e a velocidade do raster
+                        layer.perimeter.append(
+                            Raster(path, self.process.flow, self.process.speed))
+
+            # ------ PRE PROCESSAMETO DO INFILL_PATH -------
+
+            # gera os caminhos de preenchimento da camada atual baseado no método da classe "RectilinearInfill" que recebe os parãmetros referentes ao preenchimento fornecidos pelo arquivo yml
+            list_angles = self.process.infill_angle
+            buffer_InfillPath_byAngle = []
+
+            InfillPath_byAngle = [infill_method.generate_infill(layer, self.process.raster_gap, angle) for angle in list_angles]
+
+            for j in range(len(list_angles)):
+                buffer_InfillPath_byAngle.append(RawList_Points([k for k in InfillPath_byAngle[j].geoms][0]))
+
+            InfillPath_byAngle = buffer_InfillPath_byAngle.copy()
+
+            print([k for k in layer.perimeter_paths.geoms][0])
+
+            perimeterBuffer = RawList_Points([k for k in layer.perimeter_paths.geoms][-1], makeTuple=True)
+            
+
+            infill_paths = bestPath_Perimeter2Infill_rotateFlex(perimeterBuffer, InfillPath_byAngle, List_angles=[90, -90])
+            
+            print(infill_paths)
+
+            infill_paths = split_by_regions(sp.LineString(infill_paths), flex_regions)
+
+            for path in infill_paths.geoms:
+                flex_path = False
+
+                for region in flex_regions:  # para a região flexível
+                    if path.within(region.buffer(0.01, join_style=2)):
+                        flex_path, retract_path = retract(path, self.process.retract_ratio)  # noqa: E501
+                        layer.infill.append(Raster(flex_path, self.process.flex_flow, self.process.flex_speed))  # noqa: E501
+                        layer.infill.append(Raster(retract_path, self.process.retract_flow, self.process.retract_speed))  # noqa: E501
+                        flex_path = True
+                        break
+
+                if not flex_path:  # para a região normal
+                    if i == 0:  # para a primeira camada
+                        # adiciona ao preenchimento da primeira camada como deve ser o fluxo e a velocidade do raster
+                        layer.infill.append(
+                            Raster(path, self.process.first_layer_flow, self.process.speed))
+                    else:
+                        # adiciona ao preenchimento da camada como deve ser o fluxo e a velocidade do raster
+                        layer.infill.append(
+                            Raster(path, self.process.flow, self.process.speed))
             # a camada atual é adicionada ao dicionário "layers" com a chave "height" referente a altura desta camada
             self.layers[height] = layer
 
-    # ----- END OF INFILL ----------
+
+
     def export_gcode(self, filename):
         if self.process.verbose is True:  # linha de verificação fornecida dentro das configurações do próprio arquivo yml
             # mensagem quando executa essa função do programa
