@@ -1,76 +1,10 @@
-import shapely as sp
 from itertools import permutations
-#import matplotlib.pyplot as plt
-#import geopandas as gpd
+from shapely import wkt
+from shapely.geometry import LineString, Point
+from shapely.ops import nearest_points  # Correção na importação
+from itertools import permutations, product
 
-
-def text2Linestring(file):
-
-    fileLines = file.split("\n")
-
-    FirstFileLine = fileLines[0]
-    FirstFileLine = FirstFileLine.split("),")
-    FirstFileLine = list(map(lambda x: x[2:], FirstFileLine))
-
-    FirstFileLine[0] = FirstFileLine[0][16:]
-    FirstFileLine[-1] = FirstFileLine[-1][:-2]
-
-    resultListMultilinestring = []
-
-    for element in FirstFileLine:
-
-        bufferList = []
-
-        for j in range(len(element.split(","))):
-
-            # Print for vizualize each tuple(xy duo) element
-            # print(element.split(",")[j].strip())
-
-            # Creating xy point
-            p = sp.Point(float(element.split(",")[j].strip().split(" ")[0]), float(
-                element.split(",")[j].strip().split(" ")[1]))
-
-            # Insert xy point into bufferlist
-            bufferList.append(p)
-
-        # Insert xy point list into linestring list
-        resultListMultilinestring.append(sp.LineString(bufferList))
-
-        # Separate by region
-        # print("---------")
-
-    SecondFileLine = fileLines[2]
-    SecondFileLine = SecondFileLine.split(">, ")
-    SecondFileLine = list(map(lambda x: x[13:-1], SecondFileLine))
-
-    SecondFileLine[0] = SecondFileLine[0][1:]
-    SecondFileLine[-1] = SecondFileLine[-1][:-2]
-
-    resultListLinestring = []
-
-    for element in SecondFileLine:
-
-        bufferList = []
-
-        for j in range(len(element.split(","))):
-
-            # Print for vizualize each tuple(xy duo) element
-            # print(element.split(",")[j].strip())
-
-            # Creating xy point
-            p = sp.Point(float(element.split(",")[j].strip().split(" ")[0]), float(
-                element.split(",")[j].strip().split(" ")[1]))
-
-            # Insert xy point into bufferlist
-            bufferList.append(p)
-
-        # Insert xy point list into linestring list
-        resultListLinestring.append(sp.LineString(bufferList))
-
-        # Separate by region
-        # print("---------")
-
-    return (resultListMultilinestring, resultListLinestring)
+import shapely as sp
 
 
 def closestPoint(point, RawList_points):
@@ -104,6 +38,7 @@ def RawList_Points(linestring, makeTuple=False):
 
     listRaw_Points = []
 
+
     for linestr in linestring.coords:
         list_linestr = list(linestr)
         if makeTuple == True:
@@ -114,18 +49,20 @@ def RawList_Points(linestring, makeTuple=False):
                 listRaw_Points.append(coord)
 
     return listRaw_Points
-#teste = sp.LineString([[100.25, 125], [100.25, 139.75], [109.75, 139.75], [109.75, 125]])
-#print(teste)
-#print(RawList_Points(teste, makeTuple=True))
+
+
 
 def RawList_MultiPoints(multilinestring, makeTuple=False):
     # Only if the list is a multilinestring objects
 
     listRaw_MultiPoints = []
     
-    print(multilinestring.length)
-    for i in range(multilinestring.length):
-        listRaw_MultiPoints.append(RawList_Points(multilinestring[i], makeTuple=makeTuple))
+    buffer = [k for k in multilinestring.geoms]
+
+    multiLinestr_lenght = len(buffer)
+
+    for i in range(multiLinestr_lenght):
+        listRaw_MultiPoints.append(RawList_Points(multilinestring.geoms[i], makeTuple=makeTuple))
     
     return listRaw_MultiPoints
 
@@ -154,20 +91,25 @@ def perimeterPath_byPoint(startPoint, rawList_perimeterPoints, clockwise=True):
     return bestPath
 
 
-def bestPath_Infill2Perimeter(list_nextPerimeter, list_infill):
+def bestPath_Infill2Perimeter(list_nextPerimeters, list_infill):
     # Function that returns the best starting point in Perimeter Path, after finish the infill
 
     # Extracting the last point
     last_pointInfill = sp.Point(list_infill[-1])
 
+    bestPath_listPerimeters = []
 
-    # Algorith to calculate all distances(reference by last infill point) and storage the minimun distance, and the points related.
-    closestCoord = closestPoint(last_pointInfill, list_nextPerimeter)
+    for perimeter in list_nextPerimeters:
 
-    bestPath = perimeterPath_byPoint(closestCoord, list_nextPerimeter)
+        # Algorith to calculate all distances(reference by last infill point) and storage the minimun distance, and the points related.
+        closestCoord = closestPoint(last_pointInfill, perimeter)
+
+        bestPath_perimeter = perimeterPath_byPoint(closestCoord, perimeter)
+
+        bestPath_listPerimeters.append(bestPath_perimeter)
 
 
-    return bestPath
+    return bestPath_listPerimeters
 
 
 def split_PerimeterPath(PathList, numPerimeters):
@@ -223,6 +165,7 @@ def bestPath_Perimeter2Infill(listPerimeter, listInfill):
     else:
         return listInfill[::-1] # Reversed
     
+#Deprecated(?)
 def bestPath_Perimeter2Infill_rotate(List_infill, perimeter_path, List_angles):
 
     min_dist = 999
@@ -393,39 +336,130 @@ def searchAndSplit_alt(raw_lists, raw_point):
     return raw_lists, closest_point
 
 
-def bestPath_Perimeter2Infill_rotateFlex(listPerimeter, n_listInfill, List_angles):
+
+def order_list(multilinestrings, best_path, best_directions):
+
+    best_path_list = []
+
+    list_of_linestrings = [k for k in multilinestrings.geoms]
+
+    # Apply best_directions (revese if necessary)
+    for i, linestring in enumerate([k for k in multilinestrings.geoms]):
     
-    best_Infill = []
-    closest_distGreek = "" #"alpha" or "beta"
-    cp = 99999999
+        if best_directions[i] == -1:
+            list_of_linestrings[i] = linestring.reverse()
+    
+    # Sort in best_path order
+    for j in range(len(multilinestrings.geoms)):
+        index = best_path[j]
+        best_path_list.append(list_of_linestrings[index])
+    
+    return sp.MultiLineString(best_path_list)
+
+# Função para calcular o custo total de um caminho
+def path_cost(start_point, lines, path, directions):
+    total_cost = 0
+    current_point = start_point
+    
+    for i, line_index in enumerate(path):
+        line_coords = lines[line_index]
+        
+        # Se a linha estiver invertida, inverte as coordenadas
+        if directions[i] == -1:
+            line_coords = line_coords[::-1]
+        
+        line = LineString(line_coords)
+        
+        # Adiciona a distância até o ponto mais próximo
+        total_cost += current_point.distance(Point(line.coords[0]))  # Distância ao primeiro ponto da linha
+        
+        # Atualiza o ponto atual para o final da linha (respeitando a inversão)
+        current_point = Point(line.coords[1])
+
+    return total_cost
+
+def bruteForce_perm(Angle_n_lists, start_point):
+    total_best_path = None
+    total_best_directions = None
+    total_best_angle = None
+
+    final_cost = float('inf')
+
+    for i in range(len(Angle_n_lists)): # Para cada multilinestring de listas do infill geradas por angulo
+        # Define as linhas
+        lines = Angle_n_lists[i]
+
+        # Gera todas as permutações possíveis de linhas
+        line_permutations = list(permutations(range(len(lines))))
+
+        # Gera todas as combinações de direções (1 = normal, -1 = invertida)
+        directions = list(product([1, -1], repeat=len(lines)))
+
+        # Inicializa a melhor solução
+        best_path = None
+        best_directions = None
+        min_cost = float('inf')
+
+        # Testa cada permutação e cada combinação de direções
+        for perm in line_permutations:
+            for dir_comb in directions:
+                current_cost = path_cost(start_point, lines, perm, dir_comb)
+                if current_cost < min_cost:
+                    min_cost = current_cost
+                    best_path = perm
+                    best_directions = dir_comb
+
+        if min_cost < final_cost:
+            final_cost = min_cost
+
+            total_best_path = best_path
+            total_best_directions = best_directions
+            total_best_angle = i
+    
+    return total_best_path, total_best_directions, total_best_angle
+
+
+def bestPath_Perimeter2Infill_rotateFlex(listPerimeter, Angle_n_listsInfill):
+    """
+    n_listInfill é uma lista de listas primordialmente.
+    [[infill_path_angulo0], [infill_path_angulo1], [...]]
+
+    entretanto, estes "infill_path_angulo{} podem ser lista ou nao
+    caso sejam, é necessario permutar por força bruta e decidir qual ordenação é mais favoravel,
+    porém, precisa avaliar também de cada ângulo
+    """
 
     lastPoint_perimeter = sp.Point(listPerimeter[-1])
-    
-    for n_Infill in n_listInfill:
 
-        for angle in List_angles:
+    if max([len(Angle_n_listsInfill[k]) for k in range(len(Angle_n_listsInfill))]) > 1: # Se algum angulo produzir um infill com mais de 1 caminho -> permutar combinações
 
-            pointAlpha = sp.Point(n_Infill[0])
-            pointBeta = sp.Point(n_Infill[-1])
+        best_path, best_directions, best_angle = bruteForce_perm(Angle_n_listsInfill, lastPoint_perimeter)
+
+
+    else:
+        best_angle = 0
+        closest_dist = 999999999
+
+        for index, listInfill in enumerate(Angle_n_listsInfill):
+            listInfill = listInfill[0]
+
+            pointAlpha = sp.Point(listInfill[0])
+            pointBeta = sp.Point(listInfill[-1])
 
             distAlpha = lastPoint_perimeter.distance(pointAlpha)
             distBeta = lastPoint_perimeter.distance(pointBeta)
 
-            if distAlpha <= cp:
-                bestAngle = angle
-                cp = distAlpha
-                closest_distGreek = "alpha"
+            if distAlpha < closest_dist:
+                closest_dist = distAlpha
+                best_directions = 1
+                best_angle = index
 
-            if distBeta <= cp:
-                bestAngle = angle
-                cp = distBeta
-                closest_distGreek = "beta"
+            if distBeta < closest_dist:
+                closest_dist = distBeta
+                best_directions = -1
+                best_angle = index
 
-    best_Infill = n_listInfill[List_angles.index(bestAngle)]
-
-    if closest_distGreek == "beta":
-        best_Infill = best_Infill[::-1]
-
+        best_path = tuple([0])
+        best_directions = tuple([best_directions])
     
-    return best_Infill
-
+    return best_path, best_directions, best_angle

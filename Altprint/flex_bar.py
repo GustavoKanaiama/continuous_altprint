@@ -1,5 +1,5 @@
 from altprint.printable.standart_infillSlicer import StandartPrint, StandartProcess
-from altprint. printable.flex_copy import FlexProcess, FlexPrint
+from altprint. printable.flex import FlexProcess, FlexPrint
 
 import os
 
@@ -12,18 +12,10 @@ os.chdir("C:/Users/gusta/OneDrive/Documentos/GitHub/continuous_altprint/Altprint
 # Para Stavo PC
 #os.chdir("C:/Users/Gustavo Mariano/Documents/Github/continuous_altprint/Altprint")
 
+process = FlexProcess(settings_file='flex_bar.yml')
+part = FlexPrint(process)
 
-val = "flex"
-
-if val == "flex":
-    process = FlexProcess(settings_file='flex_bar.yml')
-    part = FlexPrint(process)
-
-if val == "std":
-    process = StandartProcess(settings_file='cube.yml')
-    part = StandartPrint(process)
-    
 
 part.slice()
 part.make_layers()
-part.export_gcode("flex_bar_meu.gcode")
+part.export_gcode("flex_bar.gcode")
