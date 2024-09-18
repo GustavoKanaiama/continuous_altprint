@@ -15,7 +15,7 @@ trace_layer(perimeter, z=4)
 # 3- plot the results
 fig.show()
 
-'''
+
 import plotly.graph_objects as go
 
 
@@ -46,7 +46,7 @@ def trace_layer(fig_obj, data, z=1):
     fig_obj.add_trace(go.Scatter3d(x=x_last, y=y_last, z=z_last, marker=dict(color='Red',size=5)))
 
     return 0
-
+'''
 '''
 fig = go.Figure()
 
