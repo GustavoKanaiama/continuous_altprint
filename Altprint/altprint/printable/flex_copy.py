@@ -41,6 +41,7 @@ class FlexProcess():  # definição da classe responsável por controlar os par�
             "gcode_exporter": GcodeExporter,
             "start_script": "",
             "end_script": "",
+            "vertical_gap_flex_infill": False,
             "verbose": True,
         }
         # loop que percorre todos os itens do dicionário "prop_defaults". Para cada item, ele usa a função "setattr" para definir um atributo na instância atual com o nome "prop" e o valor correspondente de kwargs se ele existir, caso contrário, ele usa o valor padrão default.
@@ -133,12 +134,6 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
             if not type(flex_regions) == list:  # noqa: E721
                 flex_regions = list(flex_regions.geoms)
 
-            # Os caminhos do perímetro da camada são divididos pelas regiões flexíveis
-            #layer.perimeter_paths = split_by_regions(layer.perimeter_paths, flex_regions)  # noqa: E501
-
-            # Os caminhos de preenchimento também são divididos pelas regiões flexíveis
-            #infill_paths = split_by_regions(infill_paths, flex_regions)
-
             # Se esta for a primeira iteração do loop (ou seja, se estamos na primeira camada), os caminhos do perímetro da saia são adicionados ao perímetro da camada
             Lists_skirt = []
 
@@ -160,7 +155,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
 
             else:
 
-                # Select the last linestring (of the Multilinestring obj) and transform to "Raw" type
+                # Select the last linestring (of the Multilinestring obj) and transform to "Raw" type (Casting)
                 Raw_lastInfillPath = RawList_Points(last_InfillPaths.geoms[-1], makeTuple=True)
 
                 Raw_bestPerimeterPath = bestPath_Infill2Perimeter(Raw_ListPerimeter, Raw_lastInfillPath)
@@ -169,9 +164,6 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                 layer.perimeter_paths = sp.MultiLineString([sp.LineString(k) for k in Raw_bestPerimeterPath])
             
             # ------ FIM DO PRE PROCESSAMENTO DO PERIMETER_PATH -------
-
-
-
             for path in split_by_regions(layer.perimeter_paths, flex_regions).geoms:
                 flex_path = False
 
@@ -195,36 +187,8 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                             Raster(path, self.process.flow, self.process.speed))
 
             # ------ COMEÇO DO PRE PROCESSAMENTO DO INFILL_PATH -------
-            infill_paths = infill_method.generate_infill(layer,
-                                                         self.process.raster_gap,
-                                                         self.process.infill_angle[0])
-            ####################################################
-            list_angles = self.process.infill_angle
-            buffer_InfillPaths_byAngle = []
-            temp_list = []
-
-            InfillPaths_byAngle = [infill_method.generate_infill(layer, self.process.raster_gap, angle) for angle in list_angles]
-
-            for j in range(len(list_angles)):
-                
-                for k in InfillPaths_byAngle[j].geoms:
-
-                    temp_list.append(RawList_Points(k, makeTuple=True))
-
-                buffer_InfillPaths_byAngle.append(temp_list.copy())
-                temp_list = []
-
-
-            perimeterBuffer = RawList_Points([k for k in layer.perimeter_paths.geoms][-1], makeTuple=True)
-
-            best_path, best_directions, best_angle = bestPath_Perimeter2Infill_rotateFlex(perimeterBuffer, buffer_InfillPaths_byAngle)
-
-            infill_paths = infill_method.generate_infill(layer,
-                                                        self.process.raster_gap,
-                                                        list_angles[best_angle])
-
-            infill_paths = order_list(infill_paths, best_path, best_directions)
-            #########################################################
+            
+            infill_paths = self.BestPath_Perimeter2Infill(layer, infill_method)
 
             last_InfillPaths = infill_paths
 
@@ -234,52 +198,74 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
 
             for path in infill_paths.geoms:
                 flex_path = False
+                if (i%2 != 0) and self.process.vertical_gap_flex_infill:
 
-                for region in flex_regions:  # para a região flexível
-                    if path.within(region.buffer(0.01, join_style=2)):
-                        flex_path, retract_path = retract(path, self.process.retract_ratio)  # noqa: E501
-                        layer.infill.append(Raster(flex_path, self.process.flex_flow, self.process.flex_speed))  # noqa: E501
-                        layer.infill.append(Raster(retract_path, self.process.retract_flow, self.process.retract_speed))  # noqa: E501
-                        flex_path = True
-                        break
+                    for region in flex_regions:  # para a região flexível
 
-                if not flex_path:  # para a região normal
-                    if i == 0:  # para a primeira camada
-                        # adiciona ao preenchimento da primeira camada como deve ser o fluxo e a velocidade do raster
-                        layer.infill.append(
-                            Raster(path, self.process.first_layer_flow, self.process.speed))
-                    else:
-                        # adiciona ao preenchimento da camada como deve ser o fluxo e a velocidade do raster
-                        layer.infill.append(
-                            Raster(path, self.process.flow, self.process.speed))
+                        if path.within(region.buffer(0.01, join_style=2)):
+                            flex_path = True
+                            break
+
+                    if not flex_path:  # para a região normal
+                        if i == 0:  # para a primeira camada
+                            # adiciona ao preenchimento da primeira camada como deve ser o fluxo e a velocidade do raster
+                            layer.infill.append(
+                                Raster(path, self.process.first_layer_flow, self.process.speed))
+                        else:
+                            # adiciona ao preenchimento da camada como deve ser o fluxo e a velocidade do raster
+                            layer.infill.append(
+                                Raster(path, self.process.flow, self.process.speed))
+                            
+
+                else:
+                    for region in flex_regions:  # para a região flexível
+                        if path.within(region.buffer(0.01, join_style=2)):
+                            flex_path, retract_path = retract(path, self.process.retract_ratio)  # noqa: E501
+                            layer.infill.append(Raster(flex_path, self.process.flex_flow, self.process.flex_speed))  # noqa: E501
+                            layer.infill.append(Raster(retract_path, self.process.retract_flow, self.process.retract_speed))  # noqa: E501
+                            flex_path = True
+                            break
+
+                    if not flex_path:  # para a região normal
+                        if i == 0:  # para a primeira camada
+                            # adiciona ao preenchimento da primeira camada como deve ser o fluxo e a velocidade do raster
+                            layer.infill.append(
+                                Raster(path, self.process.first_layer_flow, self.process.speed))
+                        else:
+                            # adiciona ao preenchimento da camada como deve ser o fluxo e a velocidade do raster
+                            layer.infill.append(
+                                Raster(path, self.process.flow, self.process.speed))
             # a camada atual é adicionada ao dicionário "layers" com a chave "height" referente a altura desta camada
             self.layers[height] = layer
-    """
-    def BestPath_Perimeter2Infill(self, layer: Layer, layer_perimeterPaths, infill_method):
-        #Recebe a layer(layer atual), layer_perimeterPath (objeto layer.perimeter_path do perímetro atual) e o método do infill
+    
+    def BestPath_Perimeter2Infill(self, layer: Layer, infill_method):
         list_angles = self.process.infill_angle
-        buffer_InfillPath_byAngle = []
+        buffer_InfillPaths_byAngle = []
+        temp_list = []
 
-        InfillPath_byAngle = [infill_method.generate_infill(layer, self.process.raster_gap, angle) for angle in list_angles]
+        InfillPaths_byAngle = [infill_method.generate_infill(layer, self.process.raster_gap, angle) for angle in list_angles]
 
         for j in range(len(list_angles)):
-            buffer_InfillPath_byAngle.append(RawList_Points([k for k in InfillPath_byAngle[j].geoms][0], makeTuple=True))
+            
+            for k in InfillPaths_byAngle[j].geoms:
 
-        InfillPath_byAngle = buffer_InfillPath_byAngle.copy()
+                temp_list.append(RawList_Points(k, makeTuple=True))
 
-        perimeterBuffer = RawList_Points([k for k in layer_perimeterPaths.geoms][-1], makeTuple=True)
+            buffer_InfillPaths_byAngle.append(temp_list.copy())
+            temp_list = []
 
-        bestAngle, reversed = bestPath_Perimeter2Infill_rotateFlex(perimeterBuffer, InfillPath_byAngle, List_angles=list_angles)
 
+        perimeterBuffer = RawList_Points([k for k in layer.perimeter_paths.geoms][-1], makeTuple=True)
 
-        infill_paths = infill_method.generate_infill(layer, self.process.raster_gap, bestAngle)
+        best_path, best_directions, best_angle = bestPath_Perimeter2Infill_rotateFlex(perimeterBuffer, buffer_InfillPaths_byAngle)
 
-        if reversed:
-            infill_paths = infill_paths.reverse()
-        
+        infill_paths = infill_method.generate_infill(layer,
+                                                    self.process.raster_gap,
+                                                    list_angles[best_angle])
+
+        infill_paths = order_list(infill_paths, best_path, best_directions)
         return infill_paths
-    """
-
+    
     def export_gcode(self, filename):
         if self.process.verbose is True:  # linha de verificação fornecida dentro das configurações do próprio arquivo yml
             # mensagem quando executa essa função do programa

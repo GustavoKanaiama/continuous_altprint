@@ -338,7 +338,7 @@ def searchAndSplit_alt(raw_lists, raw_point):
 
 
 def order_list(multilinestrings, best_path, best_directions):
-
+    #Recebe os parâmetros e a lista para oderná-la
     best_path_list = []
 
     list_of_linestrings = [k for k in multilinestrings.geoms]
