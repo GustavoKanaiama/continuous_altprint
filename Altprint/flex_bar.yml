@@ -2,7 +2,7 @@ model_file: codivillaMM.stl #arquivo da peça desejada
 flex_model_file: codivillaFF_flex.stl #arquivo da "peça" que representa a região flexível na peça original
 start_script: scripts/start_gtmax.gcode #arquivo cabeçalho de inicio da impressora
 end_script: scripts/end_gtmax.gcode #arquivo cabeçalho de fim da impressora
-infill_angle: [90, -90] #angulo de preenchimento
+infill_angle: [-90] #angulo de preenchimento
 infill_gap: 0.5 #prenchimento de lacuna
 offset: [180, 50, 0] #ponto zero da mesa
 external_adjust: 0.5 #ajuste dimensional, eh um offset que ele da nas laterais
@@ -16,9 +16,9 @@ first_layer_flow: 0.6 #fluxo na primeira camada
 flow: 0.8 #fluxo na região padrão da peça
 speed: 2400 #velocidade na região padrão da peça
 flex_flow: 0.8 #fluxo na região flexivel da peça
-flex_speed: 4800 #velocidade na região flexivel da peça
+flex_speed: 4200 #velocidade na região flexivel da peça
 retract_flow: 0.8 #fluxo na região de recuperação da peça
-retract_speed: 4800 #velocidade na região de recuperação da peça
+retract_speed: 4200 #velocidade na região de recuperação da peça
 retract_ratio: 0.9 #razao que determina a proporcao entre regiao flexivel e regiao de recuperacao, ex: 0.9 pra uma regiao de 10mm -> 9mm de regiao flexivel 1mm de recuperacao
 vertical_gap_flex_infill: True #alterna entre printar uma região flexível (flex_speed) e a outra não, para diminuir a densidade do material na peça.
 verbose: True 

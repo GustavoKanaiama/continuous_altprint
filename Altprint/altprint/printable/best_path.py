@@ -463,3 +463,29 @@ def bestPath_Perimeter2Infill_rotateFlex(listPerimeter, Angle_n_listsInfill):
         best_directions = tuple([best_directions])
     
     return best_path, best_directions, best_angle
+
+
+def create_gaps(multipolygon, num_gap, perc_gap):
+
+    xmin, ymin, xmax, ymax = multipolygon.bounds
+
+    distx_total = xmax - xmin
+
+    dist_x = (distx_total - (1-perc_gap)*distx_total)/num_gap
+    util_gap = (distx_total - (num_gap*dist_x))/(num_gap+1)
+
+    x_pointer_min = xmin + util_gap
+    x_pointer_max = xmin + util_gap + dist_x
+
+    for i in range(num_gap):
+
+        # Generate box and append to the box_list
+        box = sp.geometry.box(x_pointer_min, ymin, x_pointer_max, ymax)
+        
+        # Refresh the x_pointer
+        x_pointer_min = x_pointer_min + dist_x + util_gap
+        x_pointer_max = x_pointer_max + dist_x + util_gap
+
+        multipolygon = multipolygon.difference(box)
+
+    return multipolygon

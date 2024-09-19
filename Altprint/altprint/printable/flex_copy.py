@@ -9,7 +9,8 @@ from altprint.settingsparser import SettingsParser
 
 from altprint.printable.best_path import *
 
-
+import matplotlib.pyplot as plt
+import geopandas as gpd
 
 class FlexProcess():  # definição da classe responsável por controlar os parâmetros de impressão
     # método construtor da classe, aceita um número arbitrário de argumentos de palavra-chave
@@ -167,6 +168,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
             for path in split_by_regions(layer.perimeter_paths, flex_regions).geoms:
                 flex_path = False
 
+
                 for region in flex_regions:  # para a região flexível
                     if path.within(region.buffer(0.01, join_style=2)):
                         flex_path, retract_path = retract(path, self.process.retract_ratio)  # noqa: E501
@@ -187,8 +189,8 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                             Raster(path, self.process.flow, self.process.speed))
 
             # ------ COMEÇO DO PRE PROCESSAMENTO DO INFILL_PATH -------
-            
-            infill_paths = self.BestPath_Perimeter2Infill(layer, infill_method)
+
+            infill_paths = self.BestPath_Perimeter2Infill(layer, infill_method, i)
 
             last_InfillPaths = infill_paths
 
@@ -198,6 +200,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
 
             for path in infill_paths.geoms:
                 flex_path = False
+
                 if (i%2 != 0) and self.process.vertical_gap_flex_infill:
 
                     for region in flex_regions:  # para a região flexível
@@ -216,7 +219,6 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                             layer.infill.append(
                                 Raster(path, self.process.flow, self.process.speed))
                             
-
                 else:
                     for region in flex_regions:  # para a região flexível
                         if path.within(region.buffer(0.01, join_style=2)):
@@ -238,7 +240,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
             # a camada atual é adicionada ao dicionário "layers" com a chave "height" referente a altura desta camada
             self.layers[height] = layer
     
-    def BestPath_Perimeter2Infill(self, layer: Layer, infill_method):
+    def BestPath_Perimeter2Infill(self, layer: Layer, infill_method, i):
         list_angles = self.process.infill_angle
         buffer_InfillPaths_byAngle = []
         temp_list = []
