@@ -43,6 +43,9 @@ class FlexProcess():  # definição da classe responsável por controlar os par�
             "start_script": "",
             "end_script": "",
             "vertical_gap_flex_infill": False,
+            "horizontal_gap_flex_infill": False,
+            "horizontal_num_gap": 1,
+            "horizontal_perc_gap": 0.5,
             "verbose": True,
         }
         # loop que percorre todos os itens do dicionário "prop_defaults". Para cada item, ele usa a função "setattr" para definir um atributo na instância atual com o nome "prop" e o valor correspondente de kwargs se ele existir, caso contrário, ele usa o valor padrão default.
@@ -131,8 +134,15 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
             # define a região flexível na camada atual baseado nos planos que compêm cada camada desta região já definida na função "slice"
             flex_regions = self.flex_planes.planes[height]
             
-            # define a região flexível com gaps
-            flex_regions_gapped = create_gaps(flex_regions, 3, 0.8)
+            # em caso de "True" define a região flexível com gaps
+            if self.process.horizontal_gap_flex_infill:
+                flex_regions_gapped = create_gaps(flex_regions, 
+                                                  self.process.horizontal_num_gap, 
+                                                  self.process.horizontal_perc_gap)
+
+            # em caso de "False", não existe gap, apenas as regiões flexíveis
+            else:
+                flex_regions_gapped = flex_regions
 
             # Se "flex_regions" não for uma lista, ele é convertido em uma lista
             if not type(flex_regions) == list:  # noqa: E721
@@ -208,7 +218,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
             for path in infill_paths.geoms:
                 flex_path = False
 
-                if (i%2!=0) and alternate_layers: # Não imprime o padrão(com ou sem gap) da região flexível
+                if (i%2 != 0) and alternate_layers: # Não imprime o padrão(com ou sem gap) da região flexível
 
                     for region in flex_regions:  # para a região flexível
                         if path.within(region.buffer(0.01, join_style=2)):
