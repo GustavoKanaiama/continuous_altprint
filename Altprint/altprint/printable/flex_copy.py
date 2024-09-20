@@ -131,22 +131,12 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
             # define a região flexível na camada atual baseado nos planos que compêm cada camada desta região já definida na função "slice"
             flex_regions = self.flex_planes.planes[height]
             
-            gaps_region = create_gaps(flex_regions, 6, 0.5)
+            flex_regions_gapped = create_gaps(flex_regions, 7, 0.3)
             if i==0:
-                p = gpd.GeoSeries(gaps_region)
+                p = gpd.GeoSeries(flex_regions_gapped)
                 p.plot()
-                #plt.show()
-            #if i==0:
-                #for k in gaps_region.geoms:
-                    #p = gpd.GeoSeries(k)
-                    #p.plot()
-                #plt.show()
-
 
             # Se "flex_regions" não for uma lista, ele é convertido em uma lista
-            if not type(gaps_region) == list:  # noqa: E721
-                gaps_region = list(gaps_region.geoms)
-
             if not type(flex_regions) == list:  # noqa: E721
                 flex_regions = list(flex_regions.geoms)
 
@@ -210,7 +200,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
             last_InfillPaths = infill_paths
 
             infill_paths = split_by_regions(infill_paths, flex_regions)
-            infill_paths = split_by_regions(infill_paths, gaps_region)
+            
             # ------ FIM DO PRE PROCESSAMENTO DO INFILL_PATH -------
 
             for path in infill_paths.geoms:
@@ -235,29 +225,20 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                                 Raster(path, self.process.flow, self.process.speed))
                             
                 else:
-                    if i==0:
-                        print("flex regions: ", flex_regions)
-                    
-                    
-
-                    for region in flex_regions:  # para a região flexível
-                        its_flex = path.within(region.buffer(0.01, join_style=2))
-
-                        if its_flex:
-
-                            for gap in gaps_region:
-                                its_gap = path.within(gap.buffer(0.02, join_style=2))
-
-                                if not its_gap:                             
-                                    flex_path, retract_path = retract(path, self.process.retract_ratio)  # noqa: E501
-                                    layer.infill.append(Raster(flex_path, self.process.flex_flow, self.process.flex_speed))  # noqa: E501
-                                    layer.infill.append(Raster(retract_path, self.process.retract_flow, self.process.retract_speed))  # noqa: E501
-                                    break
+                    for region in flex_regions_gapped.geoms:  # para a região flexível
                             
-
+                        if path.within(region.buffer(0.01, join_style=2)):
+                            flex_path, retract_path = retract(path, self.process.retract_ratio)  # noqa: E501
+                            layer.infill.append(Raster(flex_path, self.process.flex_flow, self.process.flex_speed))  # noqa: E501
+                            layer.infill.append(Raster(retract_path, self.process.retract_flow, self.process.retract_speed))  # noqa: E501
                             flex_path = True
-                            if flex_path:
-                                break
+                            break
+
+                        else: #its gap
+                            for flex in flex_regions:
+                                if path.within(flex.buffer(0.02, join_style=2)):
+                                    flex_path = True
+
 
                     if not flex_path:  # para a região normal
                         if i == 0:  # para a primeira camada
@@ -270,8 +251,6 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                                 Raster(path, self.process.flow, self.process.speed))
             # a camada atual é adicionada ao dicionário "layers" com a chave "height" referente a altura desta camada
             self.layers[height] = layer
-            if i==0:
-                plt.show()
     
     def BestPath_Perimeter2Infill(self, layer: Layer, infill_method, i):
         list_angles = self.process.infill_angle

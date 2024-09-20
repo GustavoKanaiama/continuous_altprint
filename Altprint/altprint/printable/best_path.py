@@ -488,6 +488,7 @@ def create_gaps(multipolygon, num_gap, perc_gap):
 
         mask = mask.difference(box)
 
-    final = multipolygon.difference(mask)
+    #final = multipolygon.difference(mask)
+    final = mask
 
     return final
