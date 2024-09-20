@@ -440,8 +440,12 @@ def searchParameters_Perimeter2Infill_rotateFlex(listPerimeter, Angle_n_listsInf
     
     return best_path, best_directions, best_angle
 
-def create_gaps(multipolygon, num_gap, perc_gap):
-
+def create_gaps(multipolygon: sp.MultiPolygon, num_gap: int, perc_gap: float):
+    """
+    multipolygon: objeto type <MULTIPOLYGON> do shapely que indica a região flexível
+    num_gap: quantidade de gaps que será criado na região
+    perc_gap: porcentagem da área dos gaps(total, somado de todos os gaps) em relação à área total da região.
+    """
     mask = multipolygon
     xmin, ymin, xmax, ymax = mask.bounds
 

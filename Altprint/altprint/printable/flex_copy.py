@@ -131,14 +131,15 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
             # define a região flexível na camada atual baseado nos planos que compêm cada camada desta região já definida na função "slice"
             flex_regions = self.flex_planes.planes[height]
             
+            # define a região flexível com gaps
             flex_regions_gapped = create_gaps(flex_regions, 3, 0.8)
-
-            flex_gap2 = False #### out of docs
-            flex_regions2_gapped = create_gaps(flex_regions, 3, 0.8) #### out of docs
 
             # Se "flex_regions" não for uma lista, ele é convertido em uma lista
             if not type(flex_regions) == list:  # noqa: E721
                 flex_regions = list(flex_regions.geoms)
+
+            # define se a impressão da região flexível alterna entre: imprimir e não imprimir
+            alternate_layers = self.process.vertical_gap_flex_infill
 
             # Se esta for a primeira iteração do loop (ou seja, se estamos na primeira camada), os caminhos do perímetro da saia são adicionados ao perímetro da camada
             Lists_skirt = []
@@ -152,7 +153,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
             
                 lastLoop_skirt = Lists_skirt[-1] #Already "Raw" type list
 
-            # ------ COMEÇO DO PRE PROCESSAMENTO DO PERIMETER_PATH -------
+            # ------ COMEÇO DO PRE-PROCESSAMENTO DO PERIMETER_PATH -------
             Raw_ListPerimeter = RawList_MultiPoints(sp.MultiLineString([k for k in layer.perimeter_paths.geoms]), makeTuple=True)
 
             if i == 0:
@@ -169,7 +170,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                 # Casting back (Raw -> Linestring -> Multilinestring)
                 layer.perimeter_paths = sp.MultiLineString([sp.LineString(k) for k in Raw_bestPerimeterPath])
             
-            # ------ FIM DO PRE PROCESSAMENTO DO PERIMETER_PATH -------
+            # ------ FIM DO PRE-PROCESSAMENTO DO PERIMETER_PATH -------
             for path in split_by_regions(layer.perimeter_paths, flex_regions).geoms:
                 flex_path = False
 
@@ -193,7 +194,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                         layer.perimeter.append(
                             Raster(path, self.process.flow, self.process.speed))
 
-            # ------ COMEÇO DO PRE PROCESSAMENTO DO INFILL_PATH -------
+            # ------ COMEÇO DO PRE-PROCESSAMENTO DO INFILL_PATH -------
 
             # Calcula o melhor caminho do preenchimento (perímetro para o preenchimento)
             infill_paths = self.BestPath_Perimeter2Infill(layer, infill_method)
@@ -203,15 +204,33 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
 
             infill_paths = split_by_regions(infill_paths, flex_regions)
             
-            # ------ FIM DO PRE PROCESSAMENTO DO INFILL_PATH -------
-
+            # ------ FIM DO PRE-PROCESSAMENTO DO INFILL_PATH -------
             for path in infill_paths.geoms:
                 flex_path = False
 
-                if (i%2==0) and self.process.vertical_gap_flex_infill:
+                if (i%2!=0) and alternate_layers: # Não imprime o padrão(com ou sem gap) da região flexível
+
+                    for region in flex_regions:  # para a região flexível
+                        if path.within(region.buffer(0.01, join_style=2)):
+                            flex_path = True
+                            break
+
+                    if not flex_path:  # para a região normal
+                        if i == 0:  # para a primeira camada
+                            # adiciona ao preenchimento da primeira camada como deve ser o fluxo e a velocidade do raster
+                            layer.infill.append(
+                                Raster(path, self.process.first_layer_flow, self.process.speed))
+                        else:
+                            # adiciona ao preenchimento da camada como deve ser o fluxo e a velocidade do raster
+                            layer.infill.append(
+                                Raster(path, self.process.flow, self.process.speed))
+
+
+                else: #imprime o padrão(com ou sem gap) da região fléxivel
+
                     for region in flex_regions_gapped.geoms:  # para a região flexível
                             
-                        if path.within(region.buffer(0.01, join_style=2)):
+                        if path.within(region.buffer(0.01, join_style=2)): #se o caminho estiver na região flexivel
                             flex_path, retract_path = retract(path, self.process.retract_ratio)  # noqa: E501
                             layer.infill.append(Raster(flex_path, self.process.flex_flow, self.process.flex_speed))  # noqa: E501
                             layer.infill.append(Raster(retract_path, self.process.retract_flow, self.process.retract_speed))  # noqa: E501
@@ -222,17 +241,16 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                             for flex in flex_regions:
                                 if path.within(flex.buffer(0.02, join_style=2)):
                                     flex_path = True
-                else:
-                    flex_path = True
-                if not flex_path:  # para a região normal
-                    if i == 0:  # para a primeira camada
-                        # adiciona ao preenchimento da primeira camada como deve ser o fluxo e a velocidade do raster
-                        layer.infill.append(
-                            Raster(path, self.process.first_layer_flow, self.process.speed))
-                    else:
-                        # adiciona ao preenchimento da camada como deve ser o fluxo e a velocidade do raster
-                        layer.infill.append(
-                            Raster(path, self.process.flow, self.process.speed))
+
+                    if not flex_path:  # para a região normal
+                        if i == 0:  # para a primeira camada
+                            # adiciona ao preenchimento da primeira camada como deve ser o fluxo e a velocidade do raster
+                            layer.infill.append(
+                                Raster(path, self.process.first_layer_flow, self.process.speed))
+                        else:
+                            # adiciona ao preenchimento da camada como deve ser o fluxo e a velocidade do raster
+                            layer.infill.append(
+                                Raster(path, self.process.flow, self.process.speed))
                             
             # a camada atual é adicionada ao dicionário "layers" com a chave "height" referente a altura desta camada
             self.layers[height] = layer
