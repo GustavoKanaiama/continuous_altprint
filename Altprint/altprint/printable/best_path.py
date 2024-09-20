@@ -164,29 +164,6 @@ def bestPath_Perimeter2Infill(listPerimeter, listInfill):
 
     else:
         return listInfill[::-1] # Reversed
-    
-#Deprecated(?)
-def bestPath_Perimeter2Infill_rotate(List_infill, perimeter_path, List_angles):
-
-    min_dist = 999
-    infill_index = 0.5 #just initialize the variable, if its not used it will crash the code
-
-    #Pick the best infill rotation
-    for i in range(len(List_infill)):
-        infillPath_Rotation = bestPath_Perimeter2Infill(perimeter_path, List_infill[i])
-
-        #Calculate distance for each closest point (by angle rotation)
-        startPoint = sp.Point(infillPath_Rotation[0])
-        dist = startPoint.distance(sp.Point(perimeter_path[-1]))
-
-        if dist < min_dist:
-            min_dist = dist
-            infill_index = i
-
-    #Pick the best path from the 2 points(start, end)
-    bestInfill = bestPath_Perimeter2Infill(perimeter_path, List_infill[infill_index])
-
-    return bestInfill, i
 
 def conc_LoopLinestrings(listLinestrings):
     """
@@ -418,8 +395,7 @@ def bruteForce_perm(Angle_n_lists, start_point):
     
     return total_best_path, total_best_directions, total_best_angle
 
-
-def bestPath_Perimeter2Infill_rotateFlex(listPerimeter, Angle_n_listsInfill):
+def searchParameters_Perimeter2Infill_rotateFlex(listPerimeter, Angle_n_listsInfill):
     """
     n_listInfill é uma lista de listas primordialmente.
     [[infill_path_angulo0], [infill_path_angulo1], [...]]
