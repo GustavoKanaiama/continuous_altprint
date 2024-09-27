@@ -18,3 +18,5 @@ cgal_bindings/y_monotone_partition/*.so
 TRAPEZIO_flex.stl
 TRAPEZIO_CERTO.stl
 .venv
+Altprint/flex_bar.yml
+flex_bar.gcode

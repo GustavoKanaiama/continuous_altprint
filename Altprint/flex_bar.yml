@@ -25,4 +25,4 @@ horizontal_gap_flex_infill: True #
 horizontal_num_gap: 4
 horizontal_perc_gap: 0.2
 best_path: False
-verbose: True 
+verbose: True #teste
