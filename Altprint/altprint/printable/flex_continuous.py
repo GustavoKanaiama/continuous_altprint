@@ -9,9 +9,6 @@ from altprint.settingsparser import SettingsParser
 
 from altprint.printable.best_path import *
 
-import matplotlib.pyplot as plt
-import geopandas as gpd
-
 class FlexProcess():  # definição da classe responsável por controlar os parâmetros de impressão
     # método construtor da classe, aceita um número arbitrário de argumentos de palavra-chave
     def __init__(self, **kwargs):
@@ -111,7 +108,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                       self.process.overlap)
         # utiliza o método da classe "Layer" para criação do perímetro formado pela saia
         skirt.make_perimeter()
-
+        
         last_InfillPaths = [] #Just initialzie
 
         # loop que percorre todas as alturas na lista "heights". A função enumerate é usada para obter tanto o índice (i) quanto o valor (height) de cada altura.
@@ -165,7 +162,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
 
             # ------ COMEÇO DO PRE-PROCESSAMENTO DO PERIMETER_PATH -------
             Raw_ListPerimeter = RawList_MultiPoints(sp.MultiLineString([k for k in layer.perimeter_paths.geoms]), makeTuple=True)
-
+            print("Layer: ", i)
             if i == 0:
                 Raw_bestPerimeterPath = bestPath_Infill2Perimeter(Raw_ListPerimeter, lastLoop_skirt)
                 layer.perimeter_paths = sp.MultiLineString([sp.LineString(k) for k in Raw_bestPerimeterPath])
@@ -303,6 +300,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                                                     list_angles[best_angle])
 
         infill_paths = order_list(infill_paths, best_path, best_directions)
+
         return infill_paths
     
     def export_gcode(self, filename):

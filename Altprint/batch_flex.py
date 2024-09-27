@@ -1,4 +1,4 @@
-from altprint.printable.flex_copy import FlexProcess, FlexPrint
+from Altprint.altprint.printable.flex_continuous import FlexProcess, FlexPrint
 from altprint.printable.multi import MultiPrint, MultiProcess
 
 import os

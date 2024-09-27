@@ -312,25 +312,32 @@ def searchAndSplit_alt(raw_lists, raw_point):
 
     return raw_lists, closest_point
 
-
-
 def order_list(multilinestrings, best_path, best_directions):
     #Recebe os parâmetros e a lista para oderná-la
     best_path_list = []
 
     list_of_linestrings = [k for k in multilinestrings.geoms]
+    
+    #best_diretions and best_path are already parsed
 
-    # Apply best_directions (revese if necessary)
-    for i, linestring in enumerate([k for k in multilinestrings.geoms]):
-    
-        if best_directions[i] == -1:
-            list_of_linestrings[i] = linestring.reverse()
-    
     # Sort in best_path order
     for j in range(len(multilinestrings.geoms)):
         index = best_path[j]
-        best_path_list.append(list_of_linestrings[index])
+
+        if best_directions[j] == -1:
+            best_path_list.append(list_of_linestrings[index].reverse())
+        else:
+            best_path_list.append(list_of_linestrings[index])
+
+    """
+    # Apply best_directions (revese if necessary)
+    for i, linestring in enumerate([k for k in best_path_multilinestring.geoms]):
     
+        if best_directions[i] == -1:
+            print("linestring atual: ", list_of_linestrings[i])
+            list_of_linestrings[i] = linestring.reverse()
+            print("linestring depois: ", list_of_linestrings[i])
+    """
     return sp.MultiLineString(best_path_list)
 
 # Função para calcular o custo total de um caminho
@@ -408,9 +415,43 @@ def searchParameters_Perimeter2Infill_rotateFlex(listPerimeter, Angle_n_listsInf
     lastPoint_perimeter = sp.Point(listPerimeter[-1])
 
     if max([len(Angle_n_listsInfill[k]) for k in range(len(Angle_n_listsInfill))]) > 1: # Se algum angulo produzir um infill com mais de 1 caminho -> permutar combinações
+        
+        #best_path, best_directions, best_angle = bruteForce_perm(Angle_n_listsInfill, lastPoint_perimeter)
 
-        best_path, best_directions, best_angle = bruteForce_perm(Angle_n_listsInfill, lastPoint_perimeter)
+        ##Emergency search_and_split
+        # Pick the first (and only) angle infill
+        n_listInfill = Angle_n_listsInfill[0]
+        
+        # iter into a infills, search the closest first point of infill list
+        closest_dist = 999999999
 
+        best_path = list(range(len(n_listInfill)))
+        buf_bestpath = -1
+
+        best_directions = [1 for n in range(len(n_listInfill)-1)]
+        buf_directions = 0
+
+        best_angle = 0
+        for index, infill in enumerate(n_listInfill):
+
+            pointAlpha = sp.Point(infill[0])
+            pointBeta = sp.Point(infill[-1])
+
+            distAlpha = lastPoint_perimeter.distance(pointAlpha)
+            distBeta = lastPoint_perimeter.distance(pointBeta)
+
+            if distAlpha < closest_dist:
+                closest_dist = distAlpha
+                buf_directions = 1
+                buf_bestpath = index
+
+            if distBeta < closest_dist:
+                closest_dist = distBeta
+                buf_directions = -1
+                buf_bestpath = index
+
+        best_path.insert(0, best_path.pop(buf_bestpath))
+        best_directions.insert(0, buf_directions)
 
     else:
         best_angle = 0
