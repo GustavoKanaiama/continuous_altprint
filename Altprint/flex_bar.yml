@@ -1,4 +1,4 @@
-model_file: codivillaMM_A.stl #arquivo da peça desejada
+model_file: codivillaFF_A.stl #arquivo da peça desejada
 flex_model_file: codivillaFF_flex.stl #arquivo da "peça" que representa a região flexível na peça original
 start_script: scripts/start_gtmax.gcode #arquivo cabeçalho de inicio da impressora
 end_script: scripts/end_gtmax.gcode #arquivo cabeçalho de fim da impressora
@@ -24,4 +24,5 @@ vertical_gap_flex_infill: False #alterna entre printar uma região flexível (fl
 horizontal_gap_flex_infill: True #
 horizontal_num_gap: 4
 horizontal_perc_gap: 0.2
+best_path: False
 verbose: True 

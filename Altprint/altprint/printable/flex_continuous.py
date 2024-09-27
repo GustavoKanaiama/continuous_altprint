@@ -43,6 +43,7 @@ class FlexProcess():  # definição da classe responsável por controlar os par�
             "horizontal_gap_flex_infill": False,
             "horizontal_num_gap": 1,
             "horizontal_perc_gap": 0.5,
+            "best_path": True,
             "verbose": True,
         }
         # loop que percorre todos os itens do dicionário "prop_defaults". Para cada item, ele usa a função "setattr" para definir um atributo na instância atual com o nome "prop" e o valor correspondente de kwargs se ele existir, caso contrário, ele usa o valor padrão default.
@@ -161,21 +162,22 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                 lastLoop_skirt = Lists_skirt[-1] #Already "Raw" type list
 
             # ------ COMEÇO DO PRE-PROCESSAMENTO DO PERIMETER_PATH -------
-            Raw_ListPerimeter = RawList_MultiPoints(sp.MultiLineString([k for k in layer.perimeter_paths.geoms]), makeTuple=True)
-            print("Layer: ", i)
-            if i == 0:
-                Raw_bestPerimeterPath = bestPath_Infill2Perimeter(Raw_ListPerimeter, lastLoop_skirt)
-                layer.perimeter_paths = sp.MultiLineString([sp.LineString(k) for k in Raw_bestPerimeterPath])
+            if self.process.best_path: # Caso best_path esteja abilitado no .yml
+                Raw_ListPerimeter = RawList_MultiPoints(sp.MultiLineString([k for k in layer.perimeter_paths.geoms]), makeTuple=True)
 
-            else:
+                if i == 0:
+                    Raw_bestPerimeterPath = bestPath_Infill2Perimeter(Raw_ListPerimeter, lastLoop_skirt)
+                    layer.perimeter_paths = sp.MultiLineString([sp.LineString(k) for k in Raw_bestPerimeterPath])
 
-                # Select the last linestring (of the Multilinestring obj) and transform to "Raw" type (Casting)
-                Raw_lastInfillPath = RawList_Points(last_InfillPaths.geoms[-1], makeTuple=True)
+                else:
 
-                Raw_bestPerimeterPath = bestPath_Infill2Perimeter(Raw_ListPerimeter, Raw_lastInfillPath)
+                    # Select the last linestring (of the Multilinestring obj) and transform to "Raw" type (Casting)
+                    Raw_lastInfillPath = RawList_Points(last_InfillPaths.geoms[-1], makeTuple=True)
 
-                # Casting back (Raw -> Linestring -> Multilinestring)
-                layer.perimeter_paths = sp.MultiLineString([sp.LineString(k) for k in Raw_bestPerimeterPath])
+                    Raw_bestPerimeterPath = bestPath_Infill2Perimeter(Raw_ListPerimeter, Raw_lastInfillPath)
+
+                    # Casting back (Raw -> Linestring -> Multilinestring)
+                    layer.perimeter_paths = sp.MultiLineString([sp.LineString(k) for k in Raw_bestPerimeterPath])
             
             # ------ FIM DO PRE-PROCESSAMENTO DO PERIMETER_PATH -------
             for path in split_by_regions(layer.perimeter_paths, flex_regions).geoms:
@@ -202,15 +204,19 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                             Raster(path, self.process.flow, self.process.speed))
 
             # ------ COMEÇO DO PRE-PROCESSAMENTO DO INFILL_PATH -------
+            if self.process.best_path: # Caso best_path esteja abilitado no .yml
+                # Calcula o melhor caminho do preenchimento (perímetro para o preenchimento)
+                infill_paths = self.BestPath_Perimeter2Infill(layer, infill_method)
 
-            # Calcula o melhor caminho do preenchimento (perímetro para o preenchimento)
-            infill_paths = self.BestPath_Perimeter2Infill(layer, infill_method)
+                # Salva o último caminho do preenchimento (para calcular o caminho do perímetro da próxima camada)
+                last_InfillPaths = infill_paths
 
-            # Salva o último caminho do preenchimento (para calcular o caminho do perímetro da próxima camada)
-            last_InfillPaths = infill_paths
+            else:
+                infill_paths = infill_method.generate_infill(layer,
+                                                    self.process.raster_gap,
+                                                    self.process.infill_angle[0])
 
             infill_paths = split_by_regions(infill_paths, flex_regions)
-            
             # ------ FIM DO PRE-PROCESSAMENTO DO INFILL_PATH -------
             for path in infill_paths.geoms:
                 flex_path = False
