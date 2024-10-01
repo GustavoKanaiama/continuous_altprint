@@ -8,7 +8,7 @@ offset: [180, 50, 0] #ponto zero da mesa
 external_adjust: 0.5 #ajuste dimensional, eh um offset que ele da nas laterais
 perimeter_num: 2 #numero de perimetros
 perimeter_gap: 0.5 #gap entre os perimetros e o infill
-skirt_distance: 1.9 #distância da saia
+skirt_distance: 1.6 #distância da saia
 skirt_num: 6 #numero de perimetros da saia
 skirt_gap: 0.4 #largura da lacuna entre a saia e a peça
 overlap: 0.0 #sobreposição
@@ -16,13 +16,13 @@ first_layer_flow: 0.6 #fluxo na primeira camada
 flow: 0.8 #fluxo na região padrão da peça
 speed: 2400 #velocidade na região padrão da peça
 flex_flow: 0.8 #fluxo na região flexivel da peça
-flex_speed: 5000 #velocidade na região flexivel da peça
+flex_speed: 4600 #velocidade na região flexivel da peça
 retract_flow: 0.8 #fluxo na região de recuperação da peça
-retract_speed: 5000 #velocidade na região de recuperação da peça
+retract_speed: 4600 #velocidade na região de recuperação da peça
 retract_ratio: 0.9 #razao que determina a proporcao entre regiao flexivel e regiao de recuperacao, ex: 0.9 pra uma regiao de 10mm -> 9mm de regiao flexivel 1mm de recuperacao
 vertical_gap_flex_infill: False #alterna entre printar uma região flexível (flex_speed) e a outra não, para diminuir a densidade do material na peça.
-horizontal_gap_flex_infill: True
-horizontal_num_gap: 4
-horizontal_perc_gap: 0.2
-best_path: True
+horizontal_gap_flex_infill: True #cria "vãos" (gaps) horizontais em formtos retangulares na zona flexível
+horizontal_num_gap: 5 #quantidade de gaps
+horizontal_perc_gap: 0.6 #porcentagem da área vazia em relação à área total da zona flexível
+best_path: True #ativar o algoritmo de melhor caminho
 verbose: True
