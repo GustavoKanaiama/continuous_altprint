@@ -3,13 +3,13 @@ from altprint.printable.flex_continuous import FlexProcess, FlexPrint
 import os
 
 # Para Ricas **
-#os.chdir("D:/códigosVScode/continuous_altprint/Altprint")
+os.chdir("D:/códigosVScode/continuous_altprint/Altprint")
 
 # Para Stavo notebook
-os.chdir("C:/Users/gusta/OneDrive/Documentos/GitHub/continuous_altprint/Altprint")
+# os.chdir("C:/Users/gusta/OneDrive/Documentos/GitHub/continuous_altprint/Altprint")
 
 # Para Stavo PC
-#os.chdir("C:/Users/Gustavo Mariano/Documents/Github/continuous_altprint/Altprint")
+# os.chdir("C:/Users/Gustavo Mariano/Documents/Github/continuous_altprint/Altprint")
 
 process = FlexProcess(settings_file='flex_bar.yml')
 part = FlexPrint(process)
