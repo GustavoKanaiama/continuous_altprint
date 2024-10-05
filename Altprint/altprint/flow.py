@@ -4,7 +4,7 @@
 import numpy as np
 
 
-def calculate(w=0.48, h=0.2, df=1.75, adjust=1.2):
+def calculate(w=0.48, h=0.2, df=1.75, adjust=1.14):
     # quanto de filamento é necessário extrudar pra fazer a área de um raster
     """
     Calculates the flow multiplier factor, using the rounded rectangle model.
