@@ -1,10 +1,10 @@
-model_file: barL.stl #arquivo da peça desejada
-flex_model_file: flexL.stl #arquivo da "peça" que representa a região flexível na peça original
+model_file: s_ciclo_AD.stl #arquivo da peça desejada
+flex_model_file: s_ciclo_flex.stl #arquivo da "peça" que representa a região flexível na peça original
 start_script: scripts/start_gtmax.gcode #arquivo cabeçalho de inicio da impressora
 end_script: scripts/end_gtmax.gcode #arquivo cabeçalho de fim da impressora
-infill_angle: [-90] #angulo de preenchimento
+infill_angle: [0] #angulo de preenchimento
 infill_gap: 0.5 #prenchimento de lacuna
-offset: [165, 50, 0] #ponto zero da mesa
+offset: [135, 50, 0] #ponto zero da mesa
 external_adjust: 0.5 #ajuste dimensional, eh um offset que ele da nas laterais
 perimeter_num: 2 #numero de perimetros
 perimeter_gap: 0.5 #gap entre os perimetros e o infill
@@ -23,6 +23,6 @@ retract_ratio: 0.9 #razao que determina a proporcao entre regiao flexivel e regi
 vertical_gap_flex_infill: False #alterna entre printar uma região flexível (flex_speed) e a outra não, para diminuir a densidade do material na peça.
 horizontal_gap_flex_infill: False #cria "vãos" (gaps) horizontais em formtos retangulares na zona flexível
 horizontal_num_gap: 4 #quantidade de gaps
-horizontal_perc_gap: 0.2 #porcentagem da área vazia em relação à área total da zona flexível
+horizontal_perc_gap: 0.6 #porcentagem da área vazia em relação à área total da zona flexível
 best_path: False #ativar o algoritmo de melhor caminho
 verbose: True
