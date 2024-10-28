@@ -166,6 +166,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                 Raw_ListPerimeter = RawList_MultiPoints(sp.MultiLineString([k for k in layer.perimeter_paths.geoms]), makeTuple=True)
 
                 if i == 0:
+                    print(Raw_ListPerimeter)
                     Raw_bestPerimeterPath = bestPath_Infill2Perimeter(Raw_ListPerimeter, lastLoop_skirt)
                     layer.perimeter_paths = sp.MultiLineString([sp.LineString(k) for k in Raw_bestPerimeterPath])
 

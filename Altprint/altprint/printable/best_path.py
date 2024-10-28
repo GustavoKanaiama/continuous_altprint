@@ -102,6 +102,7 @@ def bestPath_Infill2Perimeter(list_nextPerimeters, list_infill):
     for perimeter in list_nextPerimeters:
 
         # Algorith to calculate all distances(reference by last infill point) and storage the minimun distance, and the points related.
+
         closestCoord = closestPoint(last_pointInfill, perimeter)
 
         bestPath_perimeter = perimeterPath_byPoint(closestCoord, perimeter)

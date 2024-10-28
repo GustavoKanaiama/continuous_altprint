@@ -66,9 +66,6 @@ class StandartPrint(BasePrint):
         self.heights = self.sliced_planes.get_heights()
 
     def make_layers(self):  # método que gera as trajetórias das camadas, desde a saia inicial, e o perímetro/contorno e o preenchimento de cada camada
-        # fig = go.Figure()
-
-        # visualizing_layers = [9]
 
         if self.process.verbose is True:  # linha de verificação fornecida dentro das configurações do próprio arquivo yml
 
@@ -88,9 +85,6 @@ class StandartPrint(BasePrint):
 
         # utiliza o método da classe "Layer" para criação do perímetro formado pela saia
         skirt.make_perimeter()
-
-        ####
-        ###
 
         # loop que percorre todas as alturas na lista "heights". A função enumerate é usada para obter tanto o índice (i) quanto o valor (height) de cada altura.
         for i, height in enumerate(self.heights):
@@ -112,16 +106,7 @@ class StandartPrint(BasePrint):
             layer.make_infill_border()
 
             # define a região flexível na camada atual baseado nos planos que compêm cada camada desta região já definida na função "slice"
-
             # Os caminhos do perímetro da camada são divididos pelas regiões flexíveis
-
-            # ******************
-            # layer.perimeter_paths = split_by_regions(layer.perimeter_paths, flex_regions)  # noqa: E501
-
-            # Os caminhos de preenchimento também são divididos pelas regiões flexíveis
-
-            # ******************
-            # infill_paths = split_by_regions(infill_paths, flex_regions)
 
             # Se esta for a primeira iteração do loop (ou seja, se estamos na primeira camada), os caminhos do perímetro da saia são adicionados ao perímetro da camada
             List_skirt = []
@@ -148,9 +133,6 @@ class StandartPrint(BasePrint):
 
             # CAST list of LINESTRINGS to list of Lists (tuples are coords.)
             for path in list(layer.perimeter_paths.geoms):
-                if i == 0:
-                    print()
-                    print(path)
                 List_perimeters.append(RawList_Points(path, makeTuple=True))
 
             # List_perimeters[0] -> externo
@@ -159,10 +141,8 @@ class StandartPrint(BasePrint):
 
             # --- APPLY FIRST LAYER PERIMETER TO RASTER ---
             if FlagPerimeterFirstLayer == True:  # First layer, adjust the flow
-
-                for p in range(len(List_perimeters)):
-                    List_perimeters[p] = bestPath_Infill2Perimeter(
-                        List_perimeters[p], lastLoop_skirt)
+                
+                List_perimeters = bestPath_Infill2Perimeter(List_perimeters, lastLoop_skirt)
 
                 for n in range(len(List_perimeters)):
                     LinestringPerimeter_perLayer = sp.LineString(
@@ -174,9 +154,8 @@ class StandartPrint(BasePrint):
             # --- APPLY OTHER LAYERS PERIMETER TO RASTER ---
             if FlagPerimeterFirstLayer == False:  # Outras camadas do Perimetro
 
-                for p in range(len(List_perimeters)):
-                    List_perimeters[p] = bestPath_Infill2Perimeter(
-                        List_perimeters[p], Last_infillList_previousLayer)
+
+                List_perimeters = bestPath_Infill2Perimeter(List_perimeters, Last_infillList_previousLayer)
 
                 for n in range(len(List_perimeters)):
 
@@ -186,11 +165,6 @@ class StandartPrint(BasePrint):
                         Raster(LinestringPerimeter_perLayer, self.process.first_layer_flow, self.process.speed))
 
             lastPointPerimeter = List_perimeters[-1][-1]
-
-            # ---- VISUALIZE perimeter layer ----
-         #   if i in visualizing_layers:
-         #       trace_layer(fig, List_perimeters[0], z=i)
-         #       trace_layer(fig, List_perimeters[1], z=i)
 
             # Reset Variables
             FlagPerimeterFirstLayer = False
@@ -224,8 +198,6 @@ class StandartPrint(BasePrint):
                     LinestringInfill_perLayer = sp.LineString(raw_infillPath)
                     layer.infill.append(
                         Raster(LinestringInfill_perLayer, self.process.first_layer_flow, self.process.speed))
-                  #  if i in visualizing_layers:
-                   #     trace_layer(fig, raw_infillPath, z=i+0.3)
 
             # --- APPLY OTHER LAYERS INFILL TO RASTER ---
             if FlagInfillFirstLayer == False:
@@ -241,8 +213,6 @@ class StandartPrint(BasePrint):
                     LinestringInfill_perLayer = sp.LineString(raw_infillPath)
                     layer.infill.append(
                         Raster(LinestringInfill_perLayer, self.process.first_layer_flow, self.process.speed))
-                   # if i in visualizing_layers:
-                    #    trace_layer(fig, raw_infillPath, z=i+0.5)
 
             Last_infillList_previousLayer = raw_infillPath.copy()
 
