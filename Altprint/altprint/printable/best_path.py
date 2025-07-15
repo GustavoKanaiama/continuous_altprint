@@ -6,18 +6,19 @@ from itertools import permutations, product
 
 import shapely as sp
 
+# faz a dist ponto a ponto do point com a rawlist_points (coord mais prox da lista do point)
+
 
 def closestPoint(point, RawList_points):
-    #Search for the closest point of Point from the RawList
-    #agg_info: agregated info, such as angle for each RawPoint
+    # Search for the closest point of Point from the RawList
+    # agg_info: agregated info, such as angle for each RawPoint
 
     min_distance = 999  # Initilize as a number bigger enough to fit the next 'if' statement
 
     for i in range(len(RawList_points)):
 
-
         perimeterCoord = RawList_points[i]
-        
+
         # Cast to 'Point' Object
         perimeterCoord = sp.Point(perimeterCoord)
 
@@ -32,18 +33,16 @@ def closestPoint(point, RawList_points):
     return closestCoord
 
 
-
 def RawList_Points(linestring, makeTuple=False):
     # Only if the list is a list of linestrings
-
+    # converti o objeto linestring em uma lista de tuplas (coordenadas da linestring)
     listRaw_Points = []
-
 
     for linestr in linestring.coords:
         list_linestr = list(linestr)
         if makeTuple == True:
             listRaw_Points.append(linestr)
-    
+
         if makeTuple == False:
             for coord in list_linestr:
                 listRaw_Points.append(coord)
@@ -51,25 +50,29 @@ def RawList_Points(linestring, makeTuple=False):
     return listRaw_Points
 
 
-
 def RawList_MultiPoints(multilinestring, makeTuple=False):
     # Only if the list is a multilinestring objects
-
+    # converti o objeto multilinestring em uma lista(listas de linestrings) de lista de tuplas (coordenadas da linestring)
     listRaw_MultiPoints = []
-    
+
     buffer = [k for k in multilinestring.geoms]
 
     multiLinestr_lenght = len(buffer)
 
     for i in range(multiLinestr_lenght):
-        listRaw_MultiPoints.append(RawList_Points(multilinestring.geoms[i], makeTuple=makeTuple))
-    
+        listRaw_MultiPoints.append(RawList_Points(
+            multilinestring.geoms[i], makeTuple=makeTuple))
+
     return listRaw_MultiPoints
 
-def perimeterPath_byPoint(startPoint, rawList_perimeterPoints, clockwise=True):
-    #startPoint is a POINT object
 
-    # Get the parimeter path by using the starting point, orientation and perimeter RawList_Points
+def perimeterPath_byPoint(startPoint, rawList_perimeterPoints, clockwise=True):
+
+    # rearranja o caminho do perímetro baseado no ponto incial dele definido no ponto mais proximo do perimetro da proxima camada para o final do infill da atual
+
+    # startPoint is a POINT object
+
+    # Get the perimeter path by using the starting point, orientation and perimeter RawList_Points
 
     # Set index of start point and slice the rawList untill the end of process(firstHalf). Then get the coord. of the end, to search the
     # initial point(SecondHalf) and continue untill reach the startPoint of firstHalf.
@@ -92,6 +95,8 @@ def perimeterPath_byPoint(startPoint, rawList_perimeterPoints, clockwise=True):
 
 
 def bestPath_Infill2Perimeter(list_nextPerimeters, list_infill):
+
+    # coloca dentro da lista do caminho do proximo perimetro com o ponto mais proximo do infill da camada atual
     # Function that returns the best starting point in Perimeter Path, after finish the infill
 
     # Extracting the last point
@@ -109,12 +114,13 @@ def bestPath_Infill2Perimeter(list_nextPerimeters, list_infill):
 
         bestPath_listPerimeters.append(bestPath_perimeter)
 
-
     return bestPath_listPerimeters
 
 
 def split_PerimeterPath(PathList, numPerimeters):
-    #Split a Path list into a list of lists (each path, e.g perimeter 0, perimeter 1, etc.) (Input: list of tuples (coords.))
+    # n utiliza mais
+
+    # Split a Path list into a list of lists (each path, e.g perimeter 0, perimeter 1, etc.) (Input: list of tuples (coords.))
     perimeter_byNumber = []
     temp_list = []
 
@@ -132,10 +138,10 @@ def split_PerimeterPath(PathList, numPerimeters):
             temp_list = []
 
             count_2 = 1
-        
-            if n != (len(PathList)-1): #Não esta no final
+
+            if n != (len(PathList)-1):  # Não esta no final
                 firstCoord = PathList[n+1]
-    
+
     if numPerimeters != len(perimeter_byNumber):
         print("Error, numPerimeters != len(perimeter_byNumber) ")
         print("numPerimeters: ", numPerimeters)
@@ -147,6 +153,7 @@ def split_PerimeterPath(PathList, numPerimeters):
 
 
 def bestPath_Perimeter2Infill(listPerimeter, listInfill):
+    # N USA MAIS
     # Search the best startPoint to initiate the Infill.
     # Calculate the distance from the lastPointPerimeter and the pointAlfa_Infill and pointBeta_Infill
 
@@ -164,7 +171,8 @@ def bestPath_Perimeter2Infill(listPerimeter, listInfill):
         return listInfill
 
     else:
-        return listInfill[::-1] # Reversed
+        return listInfill[::-1]  # Reversed
+
 
 def conc_LoopLinestrings(listLinestrings):
     """
@@ -179,26 +187,27 @@ def conc_LoopLinestrings(listLinestrings):
     for linestring in listLinestrings:
         raw_linestring = RawList_Points(linestring, makeTuple=True)
 
-        #print("raw_linestring", raw_linestring)
+        # print("raw_linestring", raw_linestring)
         for point in raw_linestring:
 
-            if Flag_first_point: #Save first point of the loop
+            if Flag_first_point:  # Save first point of the loop
                 first_point = point
 
                 buffer_list.append(point)
                 Flag_first_point = False
-            
-            else: #If it is not the first point..
+
+            else:  # If it is not the first point..
 
                 buffer_list.append(point)
 
                 if point == first_point:
-                    #Tratando algumas repetições na buffer_list
+                    # Tratando algumas repetições na buffer_list
                     last_pt = buffer_list.pop()
-                    
+
                     seen = set()
                     seen_add = seen.add
-                    buffer_list = [point for point in buffer_list if not (point in seen or seen_add(point))]
+                    buffer_list = [point for point in buffer_list if not (
+                        point in seen or seen_add(point))]
 
                     buffer_list.append(last_pt)
 
@@ -211,7 +220,7 @@ def conc_LoopLinestrings(listLinestrings):
 
 
 def searchAndSplit(raw_lists, raw_point):
-    #->function that split list by the closest 'reference point', them create 2 lists(main list splitted)
+    # ->function that split list by the closest 'reference point', them create 2 lists(main list splitted)
 
     RefPoint = sp.Point(raw_point)
     min_dist = 9999999
@@ -220,7 +229,7 @@ def searchAndSplit(raw_lists, raw_point):
     Index_counter = 0
     Index_list = 0
 
-    for raw_list in raw_lists: #Find the closest point in a list of lists
+    for raw_list in raw_lists:  # Find the closest point in a list of lists
         for pt in raw_list:
 
             pt = sp.Point(pt)
@@ -230,27 +239,26 @@ def searchAndSplit(raw_lists, raw_point):
                 closest_point = pt
                 mainList = raw_list
                 Index_list = Index_counter
-        
+
         Index_counter += 1
-            
 
     closest_point = list(closest_point.coords)[0]
 
     list1 = mainList[:mainList.index(closest_point)]
     list2 = mainList[mainList.index(closest_point):]
 
-    raw_lists.pop(Index_list) #Delete the old list that was splitted
+    raw_lists.pop(Index_list)  # Delete the old list that was splitted
 
     if len(list1) == 1:
         list2.append(list1.pop())
-    
+
     if len(list2) == 1:
         list1.append(list2.pop())
 
-
     if list1 != []:
-        raw_lists.insert(0, list1)  #Add the splitted vesions in the beggining of the array
-    
+        # Add the splitted vesions in the beggining of the array
+        raw_lists.insert(0, list1)
+
     if list2 != []:
         raw_lists.insert(0, list2)
 
@@ -258,7 +266,7 @@ def searchAndSplit(raw_lists, raw_point):
 
 
 def searchAndSplit_alt(raw_lists, raw_point):
-    #->function that split list by the closest 'reference point', them create 2 lists(main list splitted)
+    # ->function that split list by the closest 'reference point', them create 2 lists(main list splitted)
 
     RefPoint = sp.Point(raw_point)
     min_dist = 9999999
@@ -267,7 +275,7 @@ def searchAndSplit_alt(raw_lists, raw_point):
     Index_counter = 0
     Index_list = 0
 
-    for raw_list in raw_lists: #Find the closest point in a list of lists
+    for raw_list in raw_lists:  # Find the closest point in a list of lists
         for pt in raw_list:
 
             pt = sp.Point(pt)
@@ -277,13 +285,12 @@ def searchAndSplit_alt(raw_lists, raw_point):
                 closest_point = pt
                 mainList = raw_list
                 Index_list = Index_counter
-        
+
         Index_counter += 1
-            
 
     closest_point = list(closest_point.coords)[0]
 
-    #Check if the 'list1' and 'list2' have *at least* lenght = 2
+    # Check if the 'list1' and 'list2' have *at least* lenght = 2
 
     list1 = mainList[:mainList.index(closest_point)]
     list2 = mainList[mainList.index(closest_point)-1:]
@@ -296,30 +303,33 @@ def searchAndSplit_alt(raw_lists, raw_point):
             list1 = mainList[:mainList.index(closest_point)-1]
             list2 = mainList[mainList.index(closest_point)-2:]
 
-    raw_lists.pop(Index_list) #Delete the old list that was splitted
+    raw_lists.pop(Index_list)  # Delete the old list that was splitted
 
     if len(list1) == 1:
         list2.append(list1.pop())
-    
+
     if len(list2) == 1:
         list1.append(list2.pop())
 
-
     if list1 != []:
-        raw_lists.insert(0, list1)  #Add the splitted vesions in the beggining of the array
-    
+        # Add the splitted vesions in the beggining of the array
+        raw_lists.insert(0, list1)
+
     if list2 != []:
         raw_lists.insert(0, list2)
 
     return raw_lists, closest_point
 
+
 def order_list(multilinestrings, best_path, best_directions):
-    #Recebe os parâmetros e a lista para oderná-la
+    # ele ordena as linestrings da multinestring e decide qual a direção/sentido de cada linestring para a continuidade
+
+    # Recebe os parâmetros e a lista para oderná-la
     best_path_list = []
 
     list_of_linestrings = [k for k in multilinestrings.geoms]
-    
-    #best_diretions and best_path are already parsed
+
+    # best_diretions and best_path are already parsed
 
     # Sort in best_path order
     for j in range(len(multilinestrings.geoms)):
@@ -342,35 +352,44 @@ def order_list(multilinestrings, best_path, best_directions):
     return sp.MultiLineString(best_path_list)
 
 # Função para calcular o custo total de um caminho
+
+
 def path_cost(start_point, lines, path, directions):
+
+    # calcula o custo de uma combinação de linestrings
     total_cost = 0
     current_point = start_point
-    
+
     for i, line_index in enumerate(path):
         line_coords = lines[line_index]
-        
+
         # Se a linha estiver invertida, inverte as coordenadas
         if directions[i] == -1:
             line_coords = line_coords[::-1]
-        
+
         line = LineString(line_coords)
-        
+
         # Adiciona a distância até o ponto mais próximo
-        total_cost += current_point.distance(Point(line.coords[0]))  # Distância ao primeiro ponto da linha
-        
+        # Distância ao primeiro ponto da linha
+        total_cost += current_point.distance(Point(line.coords[0]))
+
         # Atualiza o ponto atual para o final da linha (respeitando a inversão)
         current_point = Point(line.coords[1])
 
     return total_cost
 
+
 def bruteForce_perm(Angle_n_lists, start_point):
+    # itera sobre os custos e ver qual o menor e retorná-lo
+
     total_best_path = None
     total_best_directions = None
     total_best_angle = None
 
     final_cost = float('inf')
 
-    for i in range(len(Angle_n_lists)): # Para cada multilinestring de listas do infill geradas por angulo
+    # Para cada multilinestring de listas do infill geradas por angulo
+    for i in range(len(Angle_n_lists)):
         # Define as linhas
         lines = Angle_n_lists[i]
 
@@ -400,8 +419,9 @@ def bruteForce_perm(Angle_n_lists, start_point):
             total_best_path = best_path
             total_best_directions = best_directions
             total_best_angle = i
-    
+
     return total_best_path, total_best_directions, total_best_angle
+
 
 def searchParameters_Perimeter2Infill_rotateFlex(listPerimeter, Angle_n_listsInfill):
     """
@@ -412,17 +432,18 @@ def searchParameters_Perimeter2Infill_rotateFlex(listPerimeter, Angle_n_listsInf
     caso sejam, é necessario permutar por força bruta e decidir qual ordenação é mais favoravel,
     porém, precisa avaliar também de cada ângulo
     """
-
+    # encontra os melhores parametros de organizaçao das linesrting, se elas invertidas ou n (BA ou AB) e o angulo da direção de impressão
     lastPoint_perimeter = sp.Point(listPerimeter[-1])
 
-    if max([len(Angle_n_listsInfill[k]) for k in range(len(Angle_n_listsInfill))]) > 1: # Se algum angulo produzir um infill com mais de 1 caminho -> permutar combinações
-        
-        #best_path, best_directions, best_angle = bruteForce_perm(Angle_n_listsInfill, lastPoint_perimeter)
+    # Se algum angulo produzir um infill com mais de 1 caminho -> permutar combinações
+    if max([len(Angle_n_listsInfill[k]) for k in range(len(Angle_n_listsInfill))]) > 1:
 
-        ##Emergency search_and_split
+        # best_path, best_directions, best_angle = bruteForce_perm(Angle_n_listsInfill, lastPoint_perimeter)
+
+        # Emergency search_and_split
         # Pick the first (and only) angle infill
         n_listInfill = Angle_n_listsInfill[0]
-        
+
         # iter into a infills, search the closest first point of infill list
         closest_dist = 999999999
 
@@ -479,8 +500,9 @@ def searchParameters_Perimeter2Infill_rotateFlex(listPerimeter, Angle_n_listsInf
 
         best_path = tuple([0])
         best_directions = tuple([best_directions])
-    
+
     return best_path, best_directions, best_angle
+
 
 def create_gaps(multipolygon: sp.MultiPolygon, num_gap: int, perc_gap: float):
     """
@@ -488,6 +510,8 @@ def create_gaps(multipolygon: sp.MultiPolygon, num_gap: int, perc_gap: float):
     num_gap: quantidade de gaps que será criado na região
     perc_gap: porcentagem da área dos gaps(total, somado de todos os gaps) em relação à área total da região.
     """
+
+    #
     mask = multipolygon
     xmin, ymin, xmax, ymax = mask.bounds
 
@@ -503,14 +527,14 @@ def create_gaps(multipolygon: sp.MultiPolygon, num_gap: int, perc_gap: float):
 
         # Generate box and append to the box_list
         box = sp.geometry.box(x_pointer_min, ymin, x_pointer_max, ymax)
-        
+
         # Refresh the x_pointer
         x_pointer_min = x_pointer_min + dist_x + util_gap
         x_pointer_max = x_pointer_max + dist_x + util_gap
 
         mask = mask.difference(box)
 
-    #final = multipolygon.difference(mask)
+    # final = multipolygon.difference(mask)
     final = mask
 
     return final

@@ -3,7 +3,7 @@ start_script: scripts/start_prusaMK3S.gcode
 end_script: scripts/end_prusaMK3S.gcode
 infill_angle: [90]
 infill_gap: 0.5
-offset: [25, 50, 0]
+offset: [50, 50, 0]
 external_adjust: 0.5
 perimeter_num: 2
 perimeter_gap: 0.5
@@ -13,5 +13,5 @@ skirt_gap: 0.5
 overlap: 0.0
 first_layer_flow: 1.2 #fluxo na primeira camada
 speed: 2400
-flow: 0.74
+flow: 0.72
 verbose: True
