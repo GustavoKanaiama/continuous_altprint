@@ -14,7 +14,7 @@ os.chdir("D:/códigosVScode/continuous_altprint/Altprint")
 
 process1 = FlexProcess(settings_file='flex_bar.yml')
 process2 = FlexProcess(settings_file='flex_bar2.yml')
-# process3 = FlexProcess(settings_file='flex_bar3.yml')
+process3 = FlexProcess(settings_file='flex_bar3.yml')
 
 part1 = FlexPrint(process1)
 part1.slice()
@@ -26,15 +26,15 @@ part2.slice()
 part2.make_layers()
 part2.export_gcode("flex_bar.gcode")
 
-# part3 = FlexPrint(process3)
-# part3.slice()
-# part3.make_layers()
-# part3.export_gcode("flex_bar.gcode")
+part3 = FlexPrint(process3)
+part3.slice()
+part3.make_layers()
+part3.export_gcode("flex_bar.gcode")
 
 multi_process = MultiProcess(
-    parts=[part1, part2],
-    start_script="scripts/start_gtmax.gcode",
-    end_script="scripts/end_gtmax.gcode")
+    parts=[part1, part2, part3],
+    start_script="scripts/start_prusaMK3S.gcode",
+    end_script="scripts/end_prusaMK3S.gcode")
 
 multi_part = MultiPrint(multi_process)
 multi_part.slice()

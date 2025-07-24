@@ -13,5 +13,5 @@ skirt_gap: 0.5
 overlap: 0.0
 first_layer_flow: 1.2 #fluxo na primeira camada
 speed: 2400
-flow: 0.7
+flow: 1.2
 verbose: True

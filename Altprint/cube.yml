@@ -11,7 +11,7 @@ skirt_distance: 10
 skirt_num: 2
 skirt_gap: 0.5
 overlap: 0.0
-first_layer_flow: 1.2 #fluxo na primeira camada
+first_layer_flow: 1 #fluxo na primeira camada
 speed: 2400
-flow: 0.74
+flow: 1 #verificar o processamento deste parâmetro no arquivo standart_infillslicer.py(n tá lendo)
 verbose: True
