@@ -53,18 +53,18 @@ class GcodeExporter:  # criando a classe que contém as funções para criação
         return segment  # o método retorna a string "segment"
 # mudança
 
-    def jump(self, x, y, v=12000) -> str:  # método responsável por gerar um rápido movimento de um ponto ao outro (salto) sem realizar extrusão de material em gcode, recebe os parâmetros X, Y e V que são as coordenadas e velocidade para o salto, ele retorna uma string
+    def jump(self, x, y, v=9000) -> str:  # método responsável por gerar um rápido movimento de um ponto ao outro (salto) sem realizar extrusão de material em gcode, recebe os parâmetros X, Y e V que são as coordenadas e velocidade para o salto, ele retorna uma string
         jump = []  # lista que armazena as linhas de gcode somente quando este método é chamado
         # string de comentário é adicionada à lista jump
         jump.append('; jumping\n')
         # comando G92 é adicionado à lista para redefinir a posição do extrusor para 3
-        jump.append('G92 E0.0000\n')  # mudei de 3.0 p/ 8.0
+        jump.append('G92 E0.0000\n')  # mudei de 3.0 p/ 0.0
         # comando G1 é adicionado à lista. O extrusor é movido para a posição 0 a uma taxa de alimentação de 2400
-        jump.append('G1 E0 F2400\n')
+        jump.append('G1 E-0.5 F2400\n')
         # comando G1 é adicionado à lista para mover o extrusor para a posição (x, y) a uma taxa de alimentação v
         jump.append('G1 X{0:.3f} Y{1:.3f} F{2:.3f}\n'.format(x, y, v))
         # comando G1 é adicionado à lista. O extrusor é movido para a posição 3 a uma taxa de alimentação de 2400
-        jump.append('G1 E0 F2400\n')  # mudei de 3 p/ 8
+        jump.append('G1 E0 F2400\n')  # mudei de 3 p/ 0
         # comando G92 é adicionado à lista para redefinir a posição do extrusor para 0
         jump.append('G92 E0.0000\n')
         jump = "".join(jump)  # a lista jump é convertida em uma única string

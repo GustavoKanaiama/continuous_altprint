@@ -552,6 +552,7 @@ def create_gaps(multipolygon: sp.MultiPolygon, num_gap: int, perc_gap: float):
         # Refresh the x_pointer
         y_pointer_min = y_pointer_min + dist_y + util_gap
         y_pointer_max = y_pointer_max + dist_y + util_gap
+# ---------------------------------------------------------------------------------
 
         mask = mask.difference(box)
 
