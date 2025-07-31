@@ -29,6 +29,7 @@ class FlexProcess():  # definição da classe responsável por controlar os par�
             "skirt_distance": 10,
             "skirt_num": 3,
             "skirt_gap": 0.5,
+            "travel_speed": 12000,
             "first_layer_flow": 2,
             "flow": 1.2,
             "speed": 2400,
@@ -44,6 +45,7 @@ class FlexProcess():  # definição da classe responsável por controlar os par�
             "horizontal_gap_flex_infill": False,
             "horizontal_num_gap": 1,
             "horizontal_perc_gap": 0.5,
+            "orientation_gap": False,
             "best_path": True,
             "verbose": True,
         }
@@ -137,7 +139,8 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
             if self.process.horizontal_gap_flex_infill:
                 flex_regions_gapped = create_gaps(flex_regions,
                                                   self.process.horizontal_num_gap,
-                                                  self.process.horizontal_perc_gap)
+                                                  self.process.horizontal_perc_gap,
+                                                  self.process.orientation_gap)
 
             # em caso de "False", não existe gap, apenas as regiões flexíveis
             else:
@@ -326,7 +329,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
             print("exporting gcode to {}".format(filename))
 
         # cria uma instância "gcode_exporter" da classe "GcodeExporter" que recebe os parãmetros referentes ao script cabeçalho inicial e final do modelo da impressora utilizada fornecido pelo arquivo yml
-        gcode_exporter = self.process.gcode_exporter(start_script=self.process.start_script,
+        gcode_exporter = self.process.gcode_exporter(self.process.travel_speed, start_script=self.process.start_script,
                                                      end_script=self.process.end_script)
         # utiliza o método "make_gcode" da classe "GcodeExporter" para gerar o gcode de todas as camadas da peça 3D
         gcode_exporter.make_gcode(self)
