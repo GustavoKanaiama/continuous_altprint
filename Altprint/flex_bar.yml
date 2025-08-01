@@ -1,10 +1,10 @@
-model_file: s_ciclo.stl #arquivo da peça desejada
-flex_model_file: s_ciclo_flex.stl #arquivo da "peça" que representa a região flexível na peça original
+model_file: barH.stl #arquivo da peça desejada
+flex_model_file: barH_flex.stl #arquivo da "peça" que representa a região flexível na peça original
 start_script: scripts/start_prusaMK3S.gcode #arquivo cabeçalho de inicio da impressora
 end_script: scripts/end_prusaMK3S.gcode #arquivo cabeçalho de fim da impressora
 infill_angle: [180] #angulo de preenchimento
 infill_gap: 0.5 #prenchimento de lacuna
-offset: [150, 100, 0] #ponto zero da mesa
+offset: [150, 25, 0] #ponto zero da mesa
 external_adjust: 0.5 #ajuste dimensional, eh um offset que ele da nas laterais
 perimeter_num: 2 #numero de perimetros
 perimeter_gap: 0.5 #gap entre os perimetros e o infill
@@ -13,6 +13,7 @@ skirt_num: 3 #numero de perimetros da saia
 skirt_gap: 0.6 #largura da lacuna entre os contornos da saia
 overlap: 0.0 #sobreposição
 travel_speed: 12000
+retraction: -0.1
 first_layer_flow: 1 #fluxo na primeira camada********
 flow: 1 #fluxo na região padrão da peça*********
 speed: 2400 #velocidade na região padrão da peça

@@ -15,23 +15,28 @@ class StandartProcess():
     def __init__(self, **kwargs):
         prop_defaults = {
             "model_file": "",
+            "flex_model_file": "",
             "slicer": STLSlicer(StandartHeightMethod()),
             "infill_method": RectilinearInfill,
-            "infill_angle": [0, 90],
+            "infill_angle": 0,
             "offset": (0, 0, 0),
             "external_adjust": 0.5,
-            "perimeter_num": 2,
+            "perimeter_num": 1,
             "perimeter_gap": 0.5,
+            "raster_gap": 0.5,
+            "overlap": 0.0,
             "skirt_distance": 10,
             "skirt_num": 3,
             "skirt_gap": 0.5,
-            "raster_gap": 0.5,
-            "overlap": 0.0,
-            "speed": 2400,
+            "travel_speed": 12000,
+            "retraction": -0.5,
+            "first_layer_flow": 2,
             "flow": 1.2,
+            "speed": 2400,
             "gcode_exporter": GcodeExporter,
             "start_script": "",
             "end_script": "",
+            "best_path": True,
             "verbose": True,
         }
 
@@ -125,7 +130,7 @@ class StandartPrint(BasePrint):
     def export_gcode(self, filename):
         if self.process.verbose is True:
             print("exporting gcode to {}".format(filename))
-        gcode_exporter = self.process.gcode_exporter(start_script=self.process.start_script,  # noqa: E501
+        gcode_exporter = self.process.gcode_exporter(self.process.travel_speed, self.process.retraction, start_script=self.process.start_script,
                                                      end_script=self.process.end_script)
         gcode_exporter.make_gcode(self)
         gcode_exporter.export_gcode(filename)

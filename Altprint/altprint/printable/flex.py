@@ -10,7 +10,6 @@ from altprint.settingsparser import SettingsParser
 from altprint.printable.best_path import *
 
 
-
 class FlexProcess():  # definição da classe responsável por controlar os parâmetros de impressão
     # método construtor da classe, aceita um número arbitrário de argumentos de palavra-chave
     def __init__(self, **kwargs):
@@ -30,6 +29,8 @@ class FlexProcess():  # definição da classe responsável por controlar os par�
             "skirt_distance": 10,
             "skirt_num": 3,
             "skirt_gap": 0.5,
+            "travel_speed": 12000,
+            "retraction": -0.5,
             "first_layer_flow": 2,
             "flow": 1.2,
             "speed": 2400,
@@ -41,6 +42,12 @@ class FlexProcess():  # definição da classe responsável por controlar os par�
             "gcode_exporter": GcodeExporter,
             "start_script": "",
             "end_script": "",
+            "vertical_gap_flex_infill": False,
+            "horizontal_gap_flex_infill": False,
+            "horizontal_num_gap": 1,
+            "horizontal_perc_gap": 0.5,
+            "orientation_gap": False,
+            "best_path": True,
             "verbose": True,
         }
         # loop que percorre todos os itens do dicionário "prop_defaults". Para cada item, ele usa a função "setattr" para definir um atributo na instância atual com o nome "prop" e o valor correspondente de kwargs se ele existir, caso contrário, ele usa o valor padrão default.
@@ -138,14 +145,15 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
 
             layer.perimeter_paths = split_by_regions(layer.perimeter_paths, flex_regions)  # noqa: E501
             # Os caminhos de preenchimento também são divididos pelas regiões flexíveis
-            #infill_paths = split_by_regions(infill_paths, flex_regions)
+            # infill_paths = split_by_regions(infill_paths, flex_regions)
 
             if i == 0:
-                #print("Perimeter geom")
-                #for k in layer.perimeter_paths.geoms: print(k)
+                # print("Perimeter geom")
+                # for k in layer.perimeter_paths.geoms: print(k)
                 print()
                 print("Infill geom")
-                for k in infill_paths.geoms: print(k)
+                for k in infill_paths.geoms:
+                    print(k)
 
             # Se esta for a primeira iteração do loop (ou seja, se estamos na primeira camada), os caminhos do perímetro da saia são adicionados ao perímetro da camada
             if i == 0:  # skirt
@@ -154,7 +162,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                     layer.perimeter.append(
                         Raster(path, self.process.first_layer_flow, self.process.speed))
 
-            # percorre cada caminho no perímetro da camada. Se o caminho estiver dentro de uma região flexível, ele é dividido em um caminho flexível e um caminho de retração, que são adicionados ao perímetro da camada. Se o caminho não estiver dentro de uma região flexível, ele é adicionado ao perímetro da camada como está    
+            # percorre cada caminho no perímetro da camada. Se o caminho estiver dentro de uma região flexível, ele é dividido em um caminho flexível e um caminho de retração, que são adicionados ao perímetro da camada. Se o caminho não estiver dentro de uma região flexível, ele é adicionado ao perímetro da camada como está
             for path in layer.perimeter_paths.geoms:
                 flex_path = False
 
@@ -201,14 +209,13 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
             # a camada atual é adicionada ao dicionário "layers" com a chave "height" referente a altura desta camada
             self.layers[height] = layer
 
-
     def export_gcode(self, filename):
         if self.process.verbose is True:  # linha de verificação fornecida dentro das configurações do próprio arquivo yml
             # mensagem quando executa essa função do programa
             print("exporting gcode to {}".format(filename))
 
         # cria uma instância "gcode_exporter" da classe "GcodeExporter" que recebe os parãmetros referentes ao script cabeçalho inicial e final do modelo da impressora utilizada fornecido pelo arquivo yml
-        gcode_exporter = self.process.gcode_exporter(start_script=self.process.start_script,
+        gcode_exporter = self.process.gcode_exporter(self.process.travel_speed, self.process.retraction, start_script=self.process.start_script,
                                                      end_script=self.process.end_script)
         # utiliza o método "make_gcode" da classe "GcodeExporter" para gerar o gcode de todas as camadas da peça 3D
         gcode_exporter.make_gcode(self)
