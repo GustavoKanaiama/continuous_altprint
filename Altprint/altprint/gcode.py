@@ -64,7 +64,7 @@ class GcodeExporter:  # criando a classe que contém as funções para criação
         # comando G92 é adicionado à lista para redefinir a posição do extrusor para 3
         jump.append('G92 E0.0000\n')  # mudei de 3.0 p/ 0.0
         # comando G1 é adicionado à lista. O extrusor é movido para a posição 0 a uma taxa de alimentação de 2400
-        jump.append('G1 E{:.3f} F2400\n'.format(e))
+        jump.append('G1 E{:.1f} F2400\n'.format(e))
         # comando G1 é adicionado à lista para mover o extrusor para a posição (x, y) a uma taxa de alimentação v
         jump.append('G1 X{0:.3f} Y{1:.3f} F{2:.3f}\n'.format(x, y, v))
         # comando G1 é adicionado à lista. O extrusor é movido para a posição 3 a uma taxa de alimentação de 2400
