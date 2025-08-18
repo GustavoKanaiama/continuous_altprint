@@ -24,8 +24,8 @@ retract_speed: 3300 #velocidade na região de recuperação da peça*******
 retract_ratio: 0.9 #razao que determina a proporcao entre regiao flexivel e regiao de recuperacao, ex: 0.9 pra uma regiao de 10mm -> 9mm de regiao flexivel 1mm de recuperacao
 vertical_gap_flex_infill: False #alterna entre printar uma região flexível (flex_speed) e a outra não, para diminuir a densidade do material na peça.
 horizontal_gap_flex_infill: True #cria "vãos" (gaps) horizontais em formtos retangulares na zona flexível
-horizontal_num_gap: 2 #quantidade de gaps
-horizontal_perc_gap: 0.2 #porcentagem da área vazia em relação à área total da zona flexível
+horizontal_num_gap: 3 #quantidade de gaps
+horizontal_perc_gap: 0.3 #porcentagem da área vazia em relação à área total da zona flexível
 orientation_gap: False #orientação de construção dos gaps: se os feixes da região flexivel estão no sentido horizontal, é False, se tiverem na vertical, é True
 best_path: True #ativar o algoritmo de melhor caminho
 verbose: True
