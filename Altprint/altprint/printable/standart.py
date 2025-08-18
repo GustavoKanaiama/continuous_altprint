@@ -6,34 +6,39 @@ from altprint.infill.rectilinear_infill import RectilinearInfill
 from altprint.gcode import GcodeExporter
 from altprint.settingsparser import SettingsParser
 
-from altprint.makeNewTest import trace_layer
-import plotly.graph_objects as go
+# from altprint.makeNewTest import trace_layer
+# import plotly.graph_objects as go
 from altprint.printable.best_path import *
+
 
 class StandartProcess():
     def __init__(self, **kwargs):
         prop_defaults = {
             "model_file": "",
+            "flex_model_file": "",
             "slicer": STLSlicer(StandartHeightMethod()),
             "infill_method": RectilinearInfill,
-            "infill_angle": [0, 90],
+            "infill_angle": 0,
             "offset": (0, 0, 0),
             "external_adjust": 0.5,
-            "perimeter_num": 2,
+            "perimeter_num": 1,
             "perimeter_gap": 0.5,
+            "raster_gap": 0.5,
+            "overlap": 0.0,
             "skirt_distance": 10,
             "skirt_num": 3,
             "skirt_gap": 0.5,
-            "raster_gap": 0.5,
-            "overlap": 0.0,
-            "speed": 2400,
+            "travel_speed": 12000,
+            "retraction": -0.5,
+            "first_layer_flow": 2,
             "flow": 1.2,
+            "speed": 2400,
             "gcode_exporter": GcodeExporter,
             "start_script": "",
             "end_script": "",
+            "best_path": True,
             "verbose": True,
         }
-
 
         for (prop, default) in prop_defaults.items():
             setattr(self, prop, kwargs.get(prop, default))
@@ -43,6 +48,7 @@ class StandartProcess():
             for (setting, value) in settings.items():
                 setattr(self, setting, value)
 
+
 class StandartPrint(BasePrint):
     """The common print. Nothing special"""
 
@@ -51,7 +57,7 @@ class StandartPrint(BasePrint):
 
     def __init__(self, process: StandartProcess):
         self.process = process
-        self.layers: _layers_dict = {} #noqa: F821
+        self.layers: _layers_dict = {}  # noqa: F821
         self.heights: list[float] = []
 
     def slice(self):
@@ -64,7 +70,7 @@ class StandartPrint(BasePrint):
         self.heights = self.sliced_planes.get_heights()
 
     def make_layers(self):
-        fig = go.Figure()
+        # fig = go.Figure()
 
         if self.process.verbose is True:
             print("generating layers ...")
@@ -73,7 +79,7 @@ class StandartPrint(BasePrint):
         skirt = Layer(self.sliced_planes.planes[self.heights[0]],
                       self.process.skirt_num,
                       self.process.skirt_gap,
-                      - self.process.skirt_distance - self.process.skirt_gap * self.process.skirt_num, #noqa: E501
+                      - self.process.skirt_distance - self.process.skirt_gap * self.process.skirt_num,  # noqa: E501
                       self.process.overlap)
         skirt.make_perimeter()
 
@@ -85,47 +91,46 @@ class StandartPrint(BasePrint):
                           self.process.overlap)
             layer.make_perimeter()
             layer.make_infill_border()
-            if type(self.process.infill_angle) == list: # noqa: E721
-                infill_angle = self.process.infill_angle[i%len(self.process.infill_angle)] # noqa: E501
+            if type(self.process.infill_angle) == list:  # noqa: E721
+                infill_angle = self.process.infill_angle[i % len(self.process.infill_angle)]  # noqa: E501
             else:
                 infill_angle = self.process.infill_angle
             infill_paths = infill_method.generate_infill(layer,
                                                          self.process.raster_gap,
                                                          infill_angle)
 
-            if i==0: #skirt
+            if i == 0:  # skirt
                 for path in skirt.perimeter_paths.geoms:
-                    layer.perimeter.append(Raster(path, self.process.flow, self.process.speed)) # noqa: E501
+                    layer.perimeter.append(Raster(path, self.process.flow, self.process.speed))  # noqa: E501
 
             for path in layer.perimeter_paths.geoms:
-                layer.perimeter.append(Raster(path, self.process.flow, self.process.speed)) # noqa: E501
-            for path in infill_paths.geoms:               
-                layer.infill.append(Raster(path, self.process.flow, self.process.speed))
-
+                layer.perimeter.append(Raster(path, self.process.flow, self.process.speed))  # noqa: E501
+            for path in infill_paths.geoms:
+                layer.infill.append(
+                    Raster(path, self.process.flow, self.process.speed))
 
             if i == 9:
                 for perimeterLinestr in list(layer.perimeter_paths.geoms):
 
-                    raw_perimeterPath = RawList_Points(perimeterLinestr, makeTuple=True)
-                    trace_layer(fig, raw_perimeterPath, z=i+0.25)
-                    
-
+                    raw_perimeterPath = RawList_Points(
+                        perimeterLinestr, makeTuple=True)
+                    # trace_layer(fig, raw_perimeterPath, z=i+0.25)
 
                 for infillLinestr in list(infill_paths.geoms):
 
-                    raw_infillPath = RawList_Points(infillLinestr, makeTuple=True)
+                    raw_infillPath = RawList_Points(
+                        infillLinestr, makeTuple=True)
                     print(raw_infillPath)
                     print()
-                    trace_layer(fig, raw_infillPath, z=i+0.5)
-                    
+                    # trace_layer(fig, raw_infillPath, z=i+0.5)
 
             self.layers[height] = layer
-        fig.show()
+        # fig.show()
 
     def export_gcode(self, filename):
         if self.process.verbose is True:
             print("exporting gcode to {}".format(filename))
-        gcode_exporter = self.process.gcode_exporter(start_script=self.process.start_script, # noqa: E501
+        gcode_exporter = self.process.gcode_exporter(self.process.travel_speed, self.process.retraction, start_script=self.process.start_script,
                                                      end_script=self.process.end_script)
         gcode_exporter.make_gcode(self)
         gcode_exporter.export_gcode(filename)

@@ -1,4 +1,4 @@
-from altprint.printable.flex_continuous import FlexProcess, FlexPrint
+from altprint.printable.standart import StandartProcess, StandartPrint
 
 import os
 
@@ -11,8 +11,8 @@ os.chdir("D:/códigosVScode/continuous_altprint/Altprint")
 # Para Stavo PC
 # os.chdir("C:/Users/Gustavo Mariano/Documents/Github/continuous_altprint/Altprint")
 
-process = FlexProcess(settings_file='flex_bar.yml')
-part = FlexPrint(process)
+process = StandartProcess(settings_file='cube.yml')
+part = StandartPrint(process)
 
 
 part.slice()

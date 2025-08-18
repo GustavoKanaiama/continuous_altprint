@@ -14,6 +14,8 @@ class MultiProcess():  # definição da classe responsável por controlar alguns
             "start_script": "",
             "end_script": "",
             "offset": (0, 0, 0),
+            "travel_speed": 12000,
+            "retraction": -0.5,
             "verbose": True,
         }
 
@@ -69,7 +71,7 @@ class MultiPrint(BasePrint):  # definição da classe responsável por converter
             print("exporting gcode to {}".format(filename))
 
         # cria uma instância "gcode_exporter" da classe "GcodeExporter" que recebe os parãmetros referentes ao script cabeçalho inicial e final do modelo da impressora utilizada fornecido pelo arquivo yml
-        gcode_exporter = self.process.gcode_exporter(start_script=self.process.start_script,  # noqa: E501
+        gcode_exporter = self.process.gcode_exporter(self.process.travel_speed, self.process.retraction, start_script=self.process.start_script,
                                                      end_script=self.process.end_script)
         # utiliza o método "make_gcode" da classe "GcodeExporter" para gerar o gcode de todas as camadas da peça 3D
         gcode_exporter.make_gcode(self)

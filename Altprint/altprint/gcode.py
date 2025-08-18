@@ -8,7 +8,8 @@ import numpy as np  # abreviação da lib numpy para usar seus recursos de forma
 class GcodeExporter:  # criando a classe que contém as funções para criação do código gcode da peça
 
     # método/função de construção da classe, que recebe como argumento os arquivos cabeçalhos inicial e final da impressora
-    def __init__(self, start_script='', end_script=''):
+    # add o atributo "travel_speed_value" para poder passar como parametro no YML a velocidade de deslocamento do bico
+    def __init__(self, travel_speed: float, travel_retraction: float, start_script='', end_script=''):
         # lista que armazenará os comandos gcode gerado como strings
         self.gcode_content: list[str] = []
         self.head_x: float = 0.0  # posição atual do cabeçote da máquina no eixo X
@@ -18,8 +19,10 @@ class GcodeExporter:  # criando a classe que contém as funções para criação
         self.start_script_fname = start_script
         # atributo que indica que é o nome de um arquivo cabeçalho final
         self.end_script_fname = end_script
-
+        self.travel_speed_value: float = travel_speed
+        self.travel_retraction_value: float = travel_retraction
     # método que recebe 5 parâmetros, coordenadas X, Y e Z, quanto de filamento em mm sera puxado e a velocidade de movimento nos eixos, ele retorna uma string
+
     def segment(self, x, y, z, e, v) -> str:
         segment = []  # lista que armazena as linhas de gcode somente quando este método é chamado
         # string de comentário é adicionada à lista segment. Em G-code, qualquer texto após um ponto e vírgula (;) é considerado um comentário e é ignorado pela máquina CNC
@@ -51,19 +54,21 @@ class GcodeExporter:  # criando a classe que contém as funções para criação
         # a lista segment é convertida em uma única string
         segment = "".join(segment)
         return segment  # o método retorna a string "segment"
+# mudança
 
-    def jump(self, x, y, v=12000) -> str:  # método responsável por gerar um rápido movimento de um ponto ao outro (salto) sem realizar extrusão de material em gcode, recebe os parâmetros X, Y e V que são as coordenadas e velocidade para o salto, ele retorna uma string
+    def jump(self, x, y, v, e) -> str:  # método responsável por gerar um rápido movimento de um ponto ao outro (salto) sem realizar extrusão de material em gcode, recebe os parâmetros X, Y e V que são as coordenadas e velocidade para o salto, ele retorna uma string
+        # removi o valor fixo de v (que antes era de 12000), agora pelo YML é possível alterá-lo em "travel_speed"
         jump = []  # lista que armazena as linhas de gcode somente quando este método é chamado
         # string de comentário é adicionada à lista jump
         jump.append('; jumping\n')
         # comando G92 é adicionado à lista para redefinir a posição do extrusor para 3
-        jump.append('G92 E3.0000\n')
+        jump.append('G92 E0.0000\n')  # mudei de 3.0 p/ 0.0
         # comando G1 é adicionado à lista. O extrusor é movido para a posição 0 a uma taxa de alimentação de 2400
-        jump.append('G1 E0 F2400\n')
+        jump.append('G1 E{:.1f} F2400\n'.format(e))
         # comando G1 é adicionado à lista para mover o extrusor para a posição (x, y) a uma taxa de alimentação v
         jump.append('G1 X{0:.3f} Y{1:.3f} F{2:.3f}\n'.format(x, y, v))
         # comando G1 é adicionado à lista. O extrusor é movido para a posição 3 a uma taxa de alimentação de 2400
-        jump.append('G1 E3 F2400\n')
+        jump.append('G1 E0 F2400\n')  # mudei de 3 p/ 0
         # comando G92 é adicionado à lista para redefinir a posição do extrusor para 0
         jump.append('G92 E0.0000\n')
         jump = "".join(jump)  # a lista jump é convertida em uma única string
@@ -97,7 +102,8 @@ class GcodeExporter:  # criando a classe que contém as funções para criação
                 # Se a distância entre a posição atual do bico da impressora e a primeira posição do raster for maior que min_jump, um comando de salto é adicionado à lista gcode_content. O comando de salto move o bico da impressora para a primeira posição do raster sem extrudir material
                 if LineString([(self.head_x, self.head_y), (x[0], y[0])]).length > self.min_jump:
                     # noqa: E501
-                    self.gcode_content.append(self.jump(x[0], y[0]))
+                    self.gcode_content.append(
+                        self.jump(x[0], y[0], self.travel_speed_value, self.travel_retraction_value))  # MEXI AQUI PRA TRAVEL_SPEED NO YML****
                 # A posição atual do bico da impressora é atualizada para a última posição do raster
                 self.head_x, self.head_y = x[-1], y[-1]
                 # comando segment é adicionado à lista gcode_content. O comando segment move o bico da impressora ao longo do caminho do raster enquanto extruda material
@@ -109,7 +115,8 @@ class GcodeExporter:  # criando a classe que contém as funções para criação
                 x, y = raster.path.xy
                 x, y = np.array(x), np.array(y)
                 if LineString([(self.head_x, self.head_y), (x[0], y[0])]).length > self.min_jump:  # noqa: E501
-                    self.gcode_content.append(self.jump(x[0], y[0]))
+                    self.gcode_content.append(
+                        self.jump(x[0], y[0], self.travel_speed_value, self.travel_retraction_value))
                 self.head_x, self.head_y = x[-1], y[-1]
                 self.gcode_content.append(self.segment(x, y, z, raster.extrusion, raster.speed))  # noqa: E501
 
@@ -123,7 +130,9 @@ class GcodeExporter:  # criando a classe que contém as funções para criação
             x, y = raster.path.xy
             x, y = np.array(x), np.array(y)
             if LineString([(self.head_x, self.head_y), (x[0], y[0])]).length > self.min_jump:  # noqa: E501
-                layer_gcode.append(self.jump(x[0], y[0]))
+                # Exemplo de Lazy, se tirar o "self.travel...", o arquivo compila se n usar a fç "make_layer_gcode"
+                layer_gcode.append(
+                    self.jump(x[0], y[0], self.travel_speed_value, self.travel_retraction_value))
             self.head_x, self.head_y = x[-1], y[-1]
             layer_gcode.append(self.segment(
                 x, y, None, raster.extrusion, raster.speed))
@@ -132,7 +141,8 @@ class GcodeExporter:  # criando a classe que contém as funções para criação
             x, y = raster.path.xy
             x, y = np.array(x), np.array(y)
             if LineString([(self.head_x, self.head_y), (x[0], y[0])]).length > self.min_jump:  # noqa: E501
-                layer_gcode.append(self.jump(x[0], y[0]))
+                layer_gcode.append(
+                    self.jump(x[0], y[0], self.travel_speed_value, self.travel_retraction_value))
             self.head_x, self.head_y = x[-1], y[-1]
             layer_gcode.append(self.segment(
                 x, y, None, raster.extrusion, raster.speed))
