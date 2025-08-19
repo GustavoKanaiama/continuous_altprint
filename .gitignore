@@ -14,6 +14,6 @@ altprint/*.pyc
 *.yml
 
 #Ignore all .gcode files
-./batch_code/*.gcode
+batch_code/*.gcode
 *.gcode
 *.egg-info
