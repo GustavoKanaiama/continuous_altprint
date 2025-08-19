@@ -1,5 +1,5 @@
-model_file: s_ciclo_H.stl #arquivo da peça desejada
-flex_model_file: s_ciclo_H_flex.stl #arquivo da "peça" que representa a região flexível na peça original
+model_file: STLs/S_ciclo_henrique/s_ciclo_H.stl #arquivo da peça desejada
+flex_model_file: STLs/S_ciclo_henrique/s_ciclo_H_flex.stl #arquivo da "peça" que representa a região flexível na peça original
 start_script: scripts/start_prusaMK3S.gcode #arquivo cabeçalho de inicio da impressora
 end_script: scripts/end_prusaMK3S.gcode #arquivo cabeçalho de fim da impressora
 infill_angle: [180] #angulo de preenchimento
