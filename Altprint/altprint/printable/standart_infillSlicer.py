@@ -16,7 +16,6 @@ class StandartProcess():
     def __init__(self, **kwargs):
         prop_defaults = {
             "model_file": "",
-            "flex_model_file": "",
             "slicer": STLSlicer(StandartHeightMethod()),
             "infill_method": RectilinearInfill,
             "infill_angle": 0,
@@ -38,6 +37,7 @@ class StandartProcess():
             "start_script": "",
             "end_script": "",
             "best_path": True,
+            "orientation_gap": False,
             "verbose": True,
         }
 

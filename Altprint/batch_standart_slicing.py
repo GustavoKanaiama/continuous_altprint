@@ -14,33 +14,30 @@ os.chdir("D:/códigosVScode/continuous_altprint/Altprint")
 
 # --------------------------------------------------------------------
 
-process1 = StandartProcess(settings_file='cube.yml')
+process1 = StandartProcess(settings_file='standart_parameters.yml')
 part1 = StandartPrint(process1)
 
 
 part1.slice()
 part1.make_layers()
-part1.export_gcode("flex_bar.gcode")
 
 # --------------------------------------------------------------------
 
-process2 = StandartProcess(settings_file='standart2.yml')
+process2 = StandartProcess(settings_file='standart_parameters2.yml')
 part2 = StandartPrint(process2)
 
 
 part2.slice()
 part2.make_layers()
-part2.export_gcode("flex_bar.gcode")
 
 # --------------------------------------------------------------------
 
-process3 = StandartProcess(settings_file='standart3.yml')
+process3 = StandartProcess(settings_file='standart_parameters3.yml')
 part3 = StandartPrint(process3)
 
 
 part3.slice()
 part3.make_layers()
-part3.export_gcode("flex_bar.gcode")
 
 # --------------------------------------------------------------------
 
@@ -52,4 +49,4 @@ multi_process = MultiProcess(
 multi_part = MultiPrint(multi_process)
 multi_part.slice()
 multi_part.make_layers()
-multi_part.export_gcode("batch_flex.gcode")
+multi_part.export_gcode("sliced_geometry.gcode")

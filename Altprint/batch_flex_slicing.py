@@ -12,24 +12,21 @@ os.chdir("D:/códigosVScode/continuous_altprint/Altprint")
 # Para Stavo PC
 # os.chdir("C:/Users/Gustavo Mariano/Documents/Github/continuous_altprint/Altprint")
 
-process1 = FlexProcess(settings_file='flex_bar.yml')
-process2 = FlexProcess(settings_file='flex_bar2.yml')
-process3 = FlexProcess(settings_file='flex_bar3.yml')
+process1 = FlexProcess(settings_file='flex_parameters.yml')
+process2 = FlexProcess(settings_file='flex_parameters2.yml')
+process3 = FlexProcess(settings_file='flex_parameters3.yml')
 
 part1 = FlexPrint(process1)
 part1.slice()
 part1.make_layers()
-part1.export_gcode("flex_bar.gcode")
 
 part2 = FlexPrint(process2)
 part2.slice()
 part2.make_layers()
-part2.export_gcode("flex_bar.gcode")
 
 part3 = FlexPrint(process3)
 part3.slice()
 part3.make_layers()
-part3.export_gcode("flex_bar.gcode")
 
 multi_process = MultiProcess(
     parts=[part1, part2, part3],
@@ -39,4 +36,4 @@ multi_process = MultiProcess(
 multi_part = MultiPrint(multi_process)
 multi_part.slice()
 multi_part.make_layers()
-multi_part.export_gcode("batch_flex.gcode")
+multi_part.export_gcode("sliced_geometry.gcode")

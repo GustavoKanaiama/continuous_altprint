@@ -11,10 +11,10 @@ os.chdir("D:/códigosVScode/continuous_altprint/Altprint")
 # Para Stavo PC
 # os.chdir("C:/Users/Gustavo Mariano/Documents/Github/continuous_altprint/Altprint")
 
-process = FlexProcess(settings_file='flex_bar.yml')
+process = FlexProcess(settings_file='flex_parameters.yml')
 part = FlexPrint(process)
 
 
 part.slice()
 part.make_layers()
-part.export_gcode("flex_bar.gcode")
+part.export_gcode("sliced_geometry.gcode")
