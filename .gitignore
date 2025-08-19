@@ -1,33 +1,19 @@
-*.pyc
-asd.py
-qwe.py
-img/*
-output/*
-main.py
-altprint.egg-info/*
-build/*
-dist/*
-gcode/*
-models/*
-figures/*
-tests/*
-cgal_bindings/y_monotone_partition/*.cxx
-cgal_bindings/y_monotone_partition/*.o
-cgal_bindings/y_monotone_partition/*.py
-cgal_bindings/y_monotone_partition/*.so
-TRAPEZIO_flex.stl
-TRAPEZIO_CERTO.stl
+#Ignore Python virtual environment directories
 .venv
-Altprint/flex_bar.yml
-flex_bar.gcode
 
 #Ignore all .stl files
 *.stl
 stl/*
 
 #Ignore Python bytecode files
+*.pyc
 altprint/__pycache__/*
 altprint/*.pyc
 
 #Ignore .yml files
 *.yml
+
+#Ignore all .gcode files
+./batch_code/*.gcode
+*.gcode
+*.egg-info
