@@ -11,9 +11,9 @@ altprint/__pycache__/*
 altprint/*.pyc
 
 #Ignore .yml files
-*.yml
+#*.yml
 
 #Ignore all .gcode files
-batch_code/*.gcode
-*.gcode
-*.egg-info
+#batch_code/*.gcode
+#*.gcode
+#*.egg-info
