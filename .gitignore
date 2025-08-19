@@ -20,3 +20,14 @@ TRAPEZIO_CERTO.stl
 .venv
 Altprint/flex_bar.yml
 flex_bar.gcode
+
+#Ignore all .stl files
+*.stl
+stl/*
+
+#Ignore Python bytecode files
+altprint/__pycache__/*
+altprint/*.pyc
+
+#Ignore .yml files
+*.yml
