@@ -12,7 +12,7 @@ altprint/*.pyc
 
 #Ignore .yml files
 *.yml
-./parameters/*.yml
+parameters/*.yml
 
 #Ignore all .gcode files
 parameters/*.gcode
