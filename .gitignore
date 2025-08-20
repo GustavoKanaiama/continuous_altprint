@@ -2,7 +2,7 @@
 .venv
 
 #Ignore all .stl files
-*.stl
+#*.stl
 
 #Ignore Python bytecode files
 *.pyc
@@ -10,8 +10,8 @@ altprint/__pycache__/*
 altprint/*.pyc
 
 #Ignore all .yml files
-*.yml
+#*.yml
 
 #Ignore all .gcode files
-*.gcode
-*.egg-info
+#*.gcode
+#*.egg-info

@@ -1,0 +1,21 @@
+model_file: slicing/stl/S_ciclo_henrique/s_ciclo_H.stl #arquivo da peça desejada
+start_script: slicing/gcode/start_prusaMK3S.gcode #arquivo cabeçalho de inicio da impressora
+end_script: slicing/gcode/end_prusaMK3S.gcode #arquivo cabeçalho de fim da impressora
+infill_angle: [180] #angulo de preenchimento
+infill_gap: 0.5 #prenchimento de lacuna
+offset: [150, 100, 0] #ponto zero da mesa
+external_adjust: 0.5 #ajuste dimensional, eh um offset que ele da nas laterais
+perimeter_num: 2 #numero de perimetros
+perimeter_gap: 0.5 #gap entre os perimetros e o infill
+skirt_distance: 10 #distância da saia
+skirt_num: 3 #numero de perimetros da saia
+skirt_gap: 0.6 #largura da lacuna entre os contornos da saia
+overlap: 0.0 #sobreposição
+travel_speed: 12000
+retraction: -0.2
+first_layer_flow: 1 #fluxo na primeira camada********
+flow: 1 #fluxo na região padrão da peça*********
+speed: 2400 #velocidade na região padrão da peça
+best_path: False #ativar o algoritmo de melhor caminho
+orientation_gap: False #orientação de construção dos gaps: se os feixes da região flexivel estão no sentido horizontal, é False, se tiverem na vertical, é True
+verbose: True
