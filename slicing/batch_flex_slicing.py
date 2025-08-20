@@ -25,4 +25,4 @@ multi_process = MultiProcess(
 multi_part = MultiPrint(multi_process)
 multi_part.slice()
 multi_part.make_layers()
-multi_part.export_gcode("slicing/parameters/sliced_geometry.gcode")
+multi_part.export_gcode("slicing/gcode/sliced_geometry.gcode")
