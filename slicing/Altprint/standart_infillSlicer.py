@@ -1,15 +1,15 @@
-from altprint.printable.base import BasePrint
-from altprint.slicer import STLSlicer
-from altprint.layer import Layer, Raster
-from altprint.height_method import StandartHeightMethod
-from altprint.infill.rectilinear_infill import RectilinearInfill
-from altprint.gcode import GcodeExporter
-from altprint.settingsparser import SettingsParser
+from Altprint.base import BasePrint
+from Altprint.slicer import STLSlicer
+from Altprint.layer import Layer, Raster
+from Altprint.height_method import StandartHeightMethod
+from Altprint.rectilinear_infill import RectilinearInfill
+from Altprint.gcode import GcodeExporter
+from Altprint.settingsparser import SettingsParser
 
 ##
 # from altprint.makeNewTest import trace_layer
 # import plotly.graph_objects as go
-from altprint.printable.best_path import *
+from Altprint.best_path import *
 
 
 class StandartProcess():

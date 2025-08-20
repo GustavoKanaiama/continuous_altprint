@@ -1,6 +1,6 @@
-from altprint.printable.base import BasePrint
-from altprint.layer import Layer
-from altprint.gcode import GcodeExporter
+from Altprint.base import BasePrint
+from Altprint.layer import Layer
+from Altprint.gcode import GcodeExporter
 
 
 class MultiProcess():  # definição da classe responsável por controlar alguns dos parâmetros de impressão, visto que pressupõe que "parts" já contém o fatiamento e a geração das trajetórias das camadas já feitos

@@ -1,8 +1,8 @@
 from shapely.geometry import Polygon, MultiLineString
 from shapely.affinity import translate, rotate
 import numpy as np
-from altprint.infill.infill import InfillMethod
-from altprint.layer import Layer
+from Altprint.infill import InfillMethod
+from Altprint.layer import Layer
 
 # arquivo define como será feito o tipo/caminho do preenchimento (raster), cada área de cada camada tem suas colunas de preenchimento e de buracos além de definir a estratégia de preenchimento pela rotação e translação de segmentos
 

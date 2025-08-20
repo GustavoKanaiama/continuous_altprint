@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from shapely.geometry import MultiLineString
 # The Layer class likely contains information about layer shapes, perimeters, and other relevant details
-from altprint.layer import Layer
+from Altprint.layer import Layer
 
 
 class InfillMethod(ABC):  # a base class for infill methods

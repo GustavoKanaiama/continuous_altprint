@@ -1,7 +1,7 @@
 # importando classe que criará objetos que representam o lugar geométrico de uma linha (unidimensional)
 from shapely.geometry import LineString
 # classe abstrata que quero utilizar para criar outra classe que seja subclasse dela para criar objetos
-from altprint.printable.base import BasePrint
+from Altprint.base import BasePrint
 import numpy as np  # abreviação da lib numpy para usar seus recursos de forma simplificada
 
 

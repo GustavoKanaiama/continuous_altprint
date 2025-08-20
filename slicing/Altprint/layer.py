@@ -1,6 +1,6 @@
 from shapely.geometry import Polygon, MultiPolygon, LineString, MultiLineString
 import numpy as np
-from altprint.flow import calculate
+from Altprint.flow import calculate
 
 # Define como será feito o percurso do raster (trajetória extrudindo) e como será lógica da construção de camadas que é dividida em perimetro e prenchimento
 

@@ -1,13 +1,13 @@
-from altprint.printable.base import BasePrint
-from altprint.slicer import STLSlicer
-from altprint.layer import Layer, Raster
-from altprint.height_method import StandartHeightMethod
-from altprint.infill.rectilinear_infill import RectilinearInfill
-from altprint.gcode import GcodeExporter
-from altprint.lineutil import split_by_regions, retract
-from altprint.settingsparser import SettingsParser
+from Altprint.base import BasePrint
+from Altprint.slicer import STLSlicer
+from Altprint.layer import Layer, Raster
+from Altprint.height_method import StandartHeightMethod
+from Altprint.rectilinear_infill import RectilinearInfill
+from Altprint.gcode import GcodeExporter
+from Altprint.lineutil import split_by_regions, retract
+from Altprint.settingsparser import SettingsParser
 
-from altprint.printable.best_path import *
+from Altprint.best_path import *
 
 
 class FlexProcess():  # definição da classe responsável por controlar os parâmetros de impressão
