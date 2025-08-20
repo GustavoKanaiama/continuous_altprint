@@ -10,8 +10,8 @@ altprint/__pycache__/*
 altprint/*.pyc
 
 #Ignore all .yml files
-#*.yml
+*.yml
 
 #Ignore all .gcode files
-#*.gcode
-#*.egg-info
+*.gcode
+*.egg-info

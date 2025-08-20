@@ -7,4 +7,4 @@ part = StandartPrint(process)
 
 part.slice()
 part.make_layers()
-part.export_gcode("slicing/parameters/sliced_geometry.gcode")
+part.export_gcode("slicing/gcode/sliced_geometry.gcode")
