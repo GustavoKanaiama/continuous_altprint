@@ -168,7 +168,7 @@ class StandartPrint(BasePrint):
                     LinestringPerimeter_perLayer = sp.LineString(
                         List_perimeters[n])
                     layer.perimeter.append(
-                        Raster(LinestringPerimeter_perLayer, self.process.first_layer_flow, self.process.speed))
+                        Raster(LinestringPerimeter_perLayer, self.process.flow, self.process.speed))
 
             lastPointPerimeter = List_perimeters[-1][-1]
 
@@ -218,7 +218,7 @@ class StandartPrint(BasePrint):
                 for raw_infillPath in Infill_RawList:
                     LinestringInfill_perLayer = sp.LineString(raw_infillPath)
                     layer.infill.append(
-                        Raster(LinestringInfill_perLayer, self.process.first_layer_flow, self.process.speed))
+                        Raster(LinestringInfill_perLayer, self.process.flow, self.process.speed))
 
             Last_infillList_previousLayer = raw_infillPath.copy()
 
