@@ -30,7 +30,8 @@ class MultiPrint(BasePrint):  # definição da classe responsável por converter
     # dicionário que contém a altura de cada camada
     _layers_dict = dict[_height, Layer]
 
-    def __init__(self, process):  # método construtor da classe, recebe um parâmetro "process" que é uma instância da classe "MultiProcess" (deveria ser). O construtor inicializa três atributos de instância
+    # método construtor da classe, recebe um parâmetro "process" que é uma instância da classe "MultiProcess" (deveria ser). O construtor inicializa três atributos de instância
+    def __init__(self, process: MultiProcess):
         # atributo que recebe as configurações dos parâmetros de impressão fornecidado pela classe "MultiProcess"
         self.process = process
         # dicionário vazio que armazena as alturas referente a cada camada
