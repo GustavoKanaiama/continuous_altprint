@@ -34,29 +34,3 @@ class StandartHeightMethod(HeightMethod):
         # valores em heights são arredondados para três casas decimais usando a função np.around
         heights = list(np.around(heights, decimals=3))
         return heights  # retorna a lista com as alturas de cada camada
-
-
-# definição da classe que também herda de HeightMethod
-class CopyHeightsFromFileMethod(HeightMethod):
-    """Get Heights from a premade gcode file"""
-
-    # construtor da classe. Ele aceita um parâmetro gcode_file_name que é o nome do arquivo G-code a ser lido
-    def __init__(self, gcode_file_name: str):
-        self.gcode_file_name = gcode_file_name
-
-    # definição do método, ele aceita um parâmetro opcional bounds e retorna uma lista de números de ponto flutuante
-    def get_heights(self, bounds=None) -> list[float]:
-        heights = []  # lista vazia, será usada para armazenar as alturas das camadas extraídas do arquivo gcode
-        # O arquivo gcode com o nome armazenado no atributo gcode_file_name da instância é aberto para leitura ('r'). O arquivo aberto é referenciado pela variável f
-        with open(self.gcode_file_name, "r") as f:
-            lines = f.readlines()  # método readlines é chamado no objeto do arquivo para ler todas as linhas do arquivo. O resultado é uma lista de strings, onde cada string é uma linha do arquivo. Esta lista é atribuída à variável lines
-        for line in lines:  # loop é iniciado que percorre todas as linhas no arquivo
-            if line.startswith("; ALTPRINT"):  # Se a linha atual começar com "; ALTPRINT", A linha é dividida em palavras usando o espaço como delimitador. A última palavra (ou seja, o último elemento da lista resultante) é convertida em um número de ponto flutuante e adicionada à lista heights
-                heights.append(float(line.split(' ')[-1]))
-        return heights  # a lista é retornada contendo as alturas das camadas extraídas do arquivo gcode
-
-
-if __name__ == "__main__":  # condição que é verdadeira se o módulo estiver sendo executado diretamente. Isso permite que você tenha partes do código que são executadas apenas quando o módulo é executado diretamente, e não quando é importado
-    # instância da classe CopyHeightsFromFileMethod é criada com o nome do arquivo “teste.gcode”. Esta instância é atribuída à variável cp
-    cp = CopyHeightsFromFileMethod("teste.gcode")
-    print(cp.get_heights())  # método get_heights é chamado no objeto cp e o resultado é impresso. Este método lê o arquivo gcode especificado no construtor da classe e extrai as alturas das camadas do arquivo
