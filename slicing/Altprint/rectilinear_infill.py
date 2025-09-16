@@ -224,6 +224,9 @@ def rectilinear_fill(shape, gap, angle=0, thres=0):
 
 # Essa classe representa um método específico de preenchimento reticulado
 class RectilinearInfill(InfillMethod):
+    def __init__(self, flex_print_instance):
+
+        self.flex_print_ref = flex_print_instance
 
     # método que gera preenchimento, retorna um objeto MultiLineString, que representa várias linhas conectadas
     def generate_infill(self, layer: Layer, gap, angle) -> MultiLineString:
@@ -234,4 +237,9 @@ class RectilinearInfill(InfillMethod):
             # Adiciona os caminhos gerados à lista infill
             infill.extend(paths.geoms)
         # Retorna os caminhos de preenchimento como um objeto MultiLineString
-        return MultiLineString(infill)
+
+        multilinestring_infill = MultiLineString(infill)
+
+        self.flex_print_ref.last_loop = multilinestring_infill.geoms[-1]
+
+        return multilinestring_infill

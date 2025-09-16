@@ -1,6 +1,6 @@
 
 
-from Altprint.flex_continuous import FlexProcess, FlexPrint
+from Altprint.flex_continuous_copy import FlexProcess, FlexPrint
 
 
 process = FlexProcess(settings_file="slicing/parameters/flex_parameters.yml")

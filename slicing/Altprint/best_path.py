@@ -173,6 +173,33 @@ def bestPath_Perimeter2Infill(listPerimeter, listInfill):
     else:
         return listInfill[::-1]  # Reversed
 
+def bestPath_skirt(list_linestrings):
+
+    bestpath_skirt = []
+
+    # Pick the First Linestring (and pop it from the list)
+    first_linestring = list_linestrings.pop(0)
+
+    # Insert the First Linestring (because it's the skirt)
+    bestpath_skirt.append(first_linestring)
+
+    last_point = sp.Point(first_linestring.coords[-1])
+
+    # Basically for each linestring we define two points (A- the first coord. and B-the last coord.) and calculate which one is closer, than perform a revese if it's necessary
+
+    for linestring in list_linestrings:
+        point_A = sp.Point(linestring.coords[0])
+        point_B = sp.Point(linestring.coords[-1])
+
+        dist_to_A = sp.distance(point_A, last_point)
+        dist_to_B = sp.distance(point_B, last_point)
+
+        if dist_to_B < dist_to_A:
+            bestpath_skirt.append(linestring.revese())
+        else:
+            bestpath_skirt.append(linestring)
+
+    return bestpath_skirt
 
 def conc_LoopLinestrings(listLinestrings):
     """
