@@ -4,6 +4,8 @@ import numpy as np
 from Altprint.infill import InfillMethod
 from Altprint.layer import Layer
 
+from Altprint.best_path import *
+
 # arquivo define como será feito o tipo/caminho do preenchimento (raster), cada área de cada camada tem suas colunas de preenchimento e de buracos além de definir a estratégia de preenchimento pela rotação e translação de segmentos
 
 
@@ -243,3 +245,34 @@ class RectilinearInfill(InfillMethod):
         self.flex_print_ref.last_loop = multilinestring_infill.geoms[-1]
 
         return multilinestring_infill
+
+    def generate_continuous_infill(self, layer: Layer, gap, angle) -> MultiLineString:
+        infill = []  # armazenar os caminhos de preenchimento
+        for border in layer.infill_border.geoms:  # Itera através das geometrias da borda de preenchimento da camada
+            # para cada borda, gera caminhos de preenchimento reticulado usando a função rectilinear_fill
+            paths = rectilinear_fill(border, gap, angle)
+            # Adiciona os caminhos gerados à lista infill
+            infill.extend(paths.geoms)
+        # Retorna os caminhos de preenchimento como um objeto MultiLineString
+        multilinestring_infill = MultiLineString(infill)
+
+        # ----- Processing BestPath -----
+        perimeterBuffer = RawList_Points(layer.flex_print_ref.last_loop, makeTuple=True)
+        
+        buffer_InfillPaths = []
+
+
+        for k in multilinestring_infill.geoms:
+            buffer_InfillPaths.append(RawList_Points(k, makeTuple=True))
+
+        best_path, best_directions, _ = searchParameters_Perimeter2Infill_rotateFlex(
+            perimeterBuffer, [buffer_InfillPaths])
+
+        multilinestring_bufferInfill = MultiLineString(buffer_InfillPaths)
+
+        infill_paths = order_list(multilinestring_bufferInfill, best_path, best_directions)
+
+        # ----- END OF Processing BestPath -----
+
+        self.flex_print_ref.last_loop = infill_paths.geoms[-1]
+        return infill_paths
