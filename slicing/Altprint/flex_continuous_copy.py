@@ -7,7 +7,9 @@ from Altprint.gcode import GcodeExporter
 from Altprint.lineutil import split_by_regions, retract
 from Altprint.settingsparser import SettingsParser
 
-from Altprint.best_path import *
+from Altprint.horizontal_gaps import create_gaps
+
+# from Altprint.best_path import *
 
 
 class FlexProcess():  # definição da classe responsável por controlar os parâmetros de impressão
@@ -103,7 +105,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
             # mensagem quando executa essa função do programa
             print("generating layers ...")
         # atribui as configurações dos parâmetros de impressão como um objeto da classe RectilinearInfill
-        infill_method = self.process.infill_method(flex_print_instance = self)
+        infill_method = self.process.infill_method(flex_print_instance=self)
 
         # lógica de construção da saia em volta da primeira camada da peça
         # cria uma instância "skirt" da classe "Layer" que recebe os parâmetros da saia fornecidos pelo arquivo yml
@@ -112,7 +114,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                       self.process.skirt_gap,
                       - self.process.skirt_distance - self.process.skirt_gap * self.process.skirt_num,  # noqa: E501
                       self.process.overlap,
-                      flex_print_instance = self)
+                      flex_print_instance=self)
         # utiliza o método da classe "Layer" para criação do perímetro formado pela saia
         skirt.make_perimeter()
         print("skirt: ", self.last_loop)
@@ -121,11 +123,11 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
         for i, height in enumerate(self.heights):
             # para cada altura, é criado um novo objeto "Layer", que recebe os parãmetros referentes ao perímetro fornecidos pelo arquivo yml, e atribuído a "layer" que é referente a cada camada
             layer = ContinuousLayer(self.sliced_planes.planes[height],
-                          self.process.perimeter_num,
-                          self.process.perimeter_gap,
-                          self.process.external_adjust,
-                          self.process.overlap,
-                          flex_print_instance = self)
+                                    self.process.perimeter_num,
+                                    self.process.perimeter_gap,
+                                    self.process.external_adjust,
+                                    self.process.overlap,
+                                    flex_print_instance=self)
             # Se o atributo shape do objeto layer for uma lista vazia, o objeto layer é adicionado ao dicionário "layers" com a chave "height" e o loop continua para a próxima iteração.
             if layer.shape == []:
                 self.layers[height] = layer
@@ -136,8 +138,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
             print("Layer ", i, "\nLast Perimeter Loop: ", self.last_loop, "\n")
             # utiliza o método da classe "Layer" para criação dos limites do preenchimento da camada atual
             layer.make_infill_border()
-            
-            
+
             # define a região flexível na camada atual baseado nos planos que compêm cada camada desta região já definida na função "slice"
             flex_regions = self.flex_planes.planes[height]
 
@@ -189,8 +190,8 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
             if self.process.best_path:  # Caso best_path esteja abilitado no .yml
                 # Calcula o melhor caminho do preenchimento (perímetro para o preenchimento)
                 infill_paths = infill_method.generate_continuous_infill(layer,
-                                                                       self.process.raster_gap,
-                                                                       self.process.infill_angle[0])
+                                                                        self.process.raster_gap,
+                                                                        self.process.infill_angle[0])
 
             else:
                 infill_paths = infill_method.generate_infill(layer,
@@ -230,49 +231,6 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
             # print("Layer ", i, "\nLast Infill Loop: ", self.last_loop, "\n")
             # a camada atual é adicionada ao dicionário "layers" com a chave "height" referente a altura desta camada
             self.layers[height] = layer
-
-    # def BestPath_Perimeter2Infill(self, layer: Layer, infill_method):
-    #     """
-    #     A lógica do código consistem em:
-    #     * Gera diferente preenchimentos variando a rotação
-    #     * itera pelos preenchimentos(gerados em cada angulo) e joga para a função "searchParameters"
-    #     * A função calcula as distâncias percorridas (custo) em relação ao ultimo ponto do perímetro
-    #     * A função escolhe e retorna os melhores parâmetros para criar o infill em que o custo é minimizado
-    #     * É gerado o infill com o ângulo emq ue o custo é minimizado (best_angle)
-    #     * a função "order_list" recebe o caminho do preenchimento e ordena ele corretamente
-    #     * OBS: ordena, pois o preenchimento é composto de varios "pedaços" (Linestrings) estes pedaços podem ser permutados para mudar de ordem
-    #     assim como podem ser invertidos.
-    #     """
-
-    #     list_angles = self.process.infill_angle
-    #     buffer_InfillPaths_byAngle = []
-    #     temp_list = []
-
-    #     InfillPaths_byAngle = [infill_method.generate_infill(
-    #         layer, self.process.raster_gap, angle) for angle in list_angles]
-
-    #     for j in range(len(list_angles)):
-
-    #         for k in InfillPaths_byAngle[j].geoms:
-
-    #             temp_list.append(RawList_Points(k, makeTuple=True))
-
-    #         buffer_InfillPaths_byAngle.append(temp_list.copy())
-    #         temp_list = []
-
-    #     perimeterBuffer = RawList_Points(
-    #         [k for k in layer.perimeter_paths.geoms][-1], makeTuple=True)
-
-    #     best_path, best_directions, best_angle = searchParameters_Perimeter2Infill_rotateFlex(
-    #         perimeterBuffer, buffer_InfillPaths_byAngle)
-
-    #     infill_paths = infill_method.generate_infill(layer,
-    #                                                  self.process.raster_gap,
-    #                                                  list_angles[best_angle])
-
-    #     infill_paths = order_list(infill_paths, best_path, best_directions)
-
-    #     return infill_paths
 
     def export_gcode(self, filename):
         if self.process.verbose is True:  # linha de verificação fornecida dentro das configurações do próprio arquivo yml
