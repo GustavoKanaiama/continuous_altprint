@@ -44,7 +44,6 @@ class FlexProcess():  # definição da classe responsável por controlar os par�
             "gcode_exporter": GcodeExporter,
             "start_script": "",
             "end_script": "",
-            "vertical_gap_flex_infill": False,
             "horizontal_gap_flex_infill": False,
             "horizontal_num_gap": 1,
             "horizontal_perc_gap": 0.5,
