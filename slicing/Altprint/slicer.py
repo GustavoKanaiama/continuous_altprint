@@ -1,7 +1,9 @@
+from typing import Optional
 from abc import ABC, abstractmethod
 import trimesh
 from shapely.geometry import MultiPolygon
 from Altprint.height_method import HeightMethod
+
 
 # este arquivo tem como funcionalidade, ler um arquivo em stl, movimentar a peça e depois fatiar ela em planos associados a cada camada (STLslicer), isso é armazenado em um objeto que recebe essas informações e armazena a altura de cada camada, a geometria de cada camada e os limites superior e inferior da peça (SlicedPlanes)
 
@@ -51,6 +53,7 @@ class STLSlicer(Slicer):
     # Constructor method with argument an instance of HeightMethod (abstract class)
     def __init__(self, height_method: HeightMethod):
         self.height_method = height_method
+        self.model: Optional[trimesh.Trimesh] = None
 
     # Loads an STL mesh from the specified file. It uses the trimesh.load_mesh() function from the trimesh library to read the mesh data from the file
     def load_model(self, model_file: str):
@@ -73,7 +76,8 @@ class STLSlicer(Slicer):
                 planes[heights[i]] = MultiPolygon(list(section.polygons_full))
             # If the section is empty (no geometry), associates an empty list with the corresponding height
             else:
-                planes[heights[i]] = []
+                # Mesma coisa que planes[heights[i]] = [], só que evita bugs de atributte error
+                planes[heights[i]] = MultiPolygon()
 
         # returns a object containing the plans and the model bounds
         return SlicedPlanes(planes, self.model.bounds)

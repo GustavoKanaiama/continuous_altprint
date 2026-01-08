@@ -1,5 +1,6 @@
+from typing import Optional
 from Altprint.base import BasePrint
-from Altprint.slicer import STLSlicer
+from Altprint.slicer import STLSlicer, SlicedPlanes
 from Altprint.layer import Layer, Raster, ContinuousLayer
 from Altprint.height_method import StandartHeightMethod
 from Altprint.rectilinear_infill import RectilinearInfill
@@ -76,6 +77,8 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
         self.layers: _layers_dict = {}
         # lista vazia que armazena os valores das alturas como float
         self.heights: list[float] = []
+        self.sliced_planes: Optional[SlicedPlanes] = None
+        self.flex_planes: Optional[SlicedPlanes] = None
         self.last_loop = []
 
     def slice(self):  # método que fatia modelo 3D e calcula as alturas das camadas
