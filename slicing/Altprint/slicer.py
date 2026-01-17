@@ -73,7 +73,8 @@ class STLSlicer(Slicer):
         planes = {}  # empty list to storage the plans
         for i, section in enumerate(sections):  # For each section
             if section:  # If the section is not empty, converts the section polygons to a MultiPolygon and associates it with the corresponding height
-                planes[heights[i]] = MultiPolygon(list(section.polygons_full))
+                planes[heights[i]] = MultiPolygon(
+                    list(section.polygons_full))  # Essa fç vem de <path.py>
             # If the section is empty (no geometry), associates an empty list with the corresponding height
             else:
                 # Mesma coisa que planes[heights[i]] = [], só que evita bugs de atributte error

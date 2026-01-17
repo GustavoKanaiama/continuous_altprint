@@ -86,8 +86,13 @@ def perimeterPath_byPoint(startPoint, rawList_perimeterPoints, clockwise=True):
         startIndex1 = rawList_perimeterPoints.index(list(startPoint.coords)[0])
         firstHalf = rawList_perimeterPoints[startIndex1:]
 
-        startIndex2 = rawList_perimeterPoints.index(firstHalf[-1])
-        secondHalf = rawList_perimeterPoints[startIndex2+1:startIndex1+1]
+        # startIndex2 = rawList_perimeterPoints.index(firstHalf[-1])
+        # secondHalf = rawList_perimeterPoints[startIndex2+1:startIndex1+1]
+
+        # aqui nao seira melhor só:
+        secondHalf = rawList_perimeterPoints[:startIndex1+1]
+
+        # o intuito dessa segunda lista é pegar do começo da lista original até o indice que contém a coordenada mais próxima (definida na primeira lista)
 
         bestPath = firstHalf + secondHalf
 
