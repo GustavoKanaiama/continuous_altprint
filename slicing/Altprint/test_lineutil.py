@@ -39,13 +39,14 @@ def split_lines(lines, spliter):
 # quebra uma unica região, que contém todos segmentos dentro dela, em outras regiões (separar as regiões normal, flexivel e de recuperação)
 
 
-# This function takes two arguments: lines (a MultiLineString) and regions (a list of LineStrings)
+# This function takes two arguments: lines (a MultiLineString) and regions (a list of (list of LineStrings))
 def split_by_regions(lines, regions):
     # create a list of geometries extracted from the MultiLineString (lines)
     final = list(lines.geoms)
     # For each region in "regions", call the function "split_lines" on the list of geometries "final"  and split the geometrys at specified region
-    for region in regions:
-        # Update final with the newly split geometries
-        final = split_lines(final, region)
+    for i in range(len(regions)):
+        for region in regions[i]:
+            # Update final with the newly split geometries
+            final = split_lines(final, region)
     # Return a MultiLineString composed of the final split geometries
     return MultiLineString(final)

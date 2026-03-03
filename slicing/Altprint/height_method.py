@@ -17,7 +17,7 @@ class StandartHeightMethod(HeightMethod):
     """Evenly spaced layers"""
 
     # método construtor da classe, ele aceita um parâmetro layer_height com um valor padrão de 0.2
-    def __init__(self, layer_height: float = 0.2):
+    def __init__(self, layer_height: float):
         self.layer_height = layer_height
 
     # método que calcula as alturas das camadas com base nos limites fornecidos e na altura da camada definida no construtor, recebe um parâmetro bounds e retorna uma lista de números de ponto flutuante

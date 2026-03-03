@@ -5,7 +5,8 @@ from Altprint.layer import Layer, Raster, ContinuousLayer
 from Altprint.height_method import StandartHeightMethod
 from Altprint.rectilinear_infill import RectilinearInfill
 from Altprint.gcode import GcodeExporter
-from Altprint.lineutil import split_by_regions, line_flex_region
+# from Altprint.lineutil import split_by_regions, line_flex_region
+from Altprint.test_lineutil import split_by_regions, line_flex_region
 from Altprint.settingsparser import SettingsParser
 
 from Altprint.horizontal_gaps import create_gaps
@@ -39,6 +40,7 @@ class FlexProcess():  # definição da classe responsável por controlar os par�
             "speed": 2400,
             "flex_flow": 0,
             "flex_speed": 2000,
+            "num_flex_regions": 1,
             # "retract_flow": 2,
             # "retract_speed": 1200,
             # "retract_ratio": 0.9,
@@ -78,7 +80,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
         # lista vazia que armazena os valores das alturas como float
         self.heights: list[float] = []
         self.sliced_planes: Optional[SlicedPlanes] = None
-        self.flex_planes: Optional[SlicedPlanes] = None
+        self.flex_planes: list[Optional[SlicedPlanes]] = []
         self.last_loop = []
 
     def slice(self):  # método que fatia modelo 3D e calcula as alturas das camadas
@@ -95,12 +97,17 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
         # método da classe StandartHeightMethod, calcula e retorna uma lista com as alturas de cada camada
         self.heights = self.sliced_planes.get_heights()
 
-        # método dentro da Classe STLSlicer que lê o arquivo do objeto 3D referente a região flexível (em stl) determinado no arquivo yml
-        slicer.load_model(self.process.flex_model_file)
-        # método dentro da Classe STLSlicer que translada o objeto no plano 3D para um offset determinado no arquivo yml
-        slicer.translate_model(self.process.offset)
-        # método dentro da Classe STLSlicer que fatia o objeto 3D em uma quantidade de planos igual ao numero de camadas (que é obtido através do tamanho do vetor que armazena as alturas de cada camada)
-        self.flex_planes = slicer.slice_model(self.heights)
+        if len(self.process.flex_model_file) == self.process.num_flex_regions:
+
+            for i in range(self.process.num_flex_regions):
+                # método dentro da Classe STLSlicer que lê o arquivo do objeto 3D referente a região flexível (em stl) determinado no arquivo yml
+                slicer.load_model(self.process.flex_model_file[i])
+                # método dentro da Classe STLSlicer que translada o objeto no plano 3D para um offset determinado no arquivo yml
+                slicer.translate_model(self.process.offset)
+                # método dentro da Classe STLSlicer que fatia o objeto 3D em uma quantidade de planos igual ao numero de camadas (que é obtido através do tamanho do vetor que armazena as alturas de cada camada)
+                self.flex_planes.append(slicer.slice_model(self.heights))
+        else:
+            print("a quantidade de regiões flexiviveis fornecidads é incoerente com o numero de regioes flexiveis informado")
 
     def make_layers(self):  # método que gera as trajetórias das camadas, desde a saia inicial, e o perímetro/contorno e o preenchimento de cada camada
         if self.process.verbose is True:  # linha de verificação fornecida dentro das configurações do próprio arquivo yml
@@ -141,23 +148,26 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
             # utiliza o método da classe "Layer" para criação dos limites do preenchimento da camada atual
             layer.make_infill_border()
 
-            # define a região flexível na camada atual baseado nos planos que compêm cada camada desta região já definida na função "slice"
-            flex_regions = self.flex_planes.planes[height]
+            flex_regions = []
+            flex_regions_gapped = []
+            for i in range(self.process.num_flex_regions):
+                # define a região flexível na camada atual baseado nos planos que compêm cada camada desta região já definida na função "slice"
+                flex_regions.append(self.flex_planes[i].planes[height])
 
-            # em caso de "True" define a região flexível com gaps
-            if self.process.horizontal_gap_flex_infill:
-                flex_regions_gapped = create_gaps(flex_regions,
-                                                  self.process.horizontal_num_gap,
-                                                  self.process.horizontal_perc_gap,
-                                                  self.process.orientation_gap)
+                # em caso de "True" define a região flexível com gaps
+                if (self.process.horizontal_gap_flex_infill and self.process.horizontal_perc_gap[i] > 0):
+                    flex_regions_gapped.append(create_gaps(flex_regions[i],
+                                                           self.process.horizontal_num_gap[i],
+                                                           self.process.horizontal_perc_gap[i],
+                                                           self.process.orientation_gap))
 
-            # em caso de "False", não existe gap, apenas as regiões flexíveis
-            else:
-                flex_regions_gapped = flex_regions
+                # em caso de "False", não existe gap, apenas as regiões flexíveis
+                else:
+                    flex_regions_gapped.append(flex_regions[i])
 
-            # Se "flex_regions" não for uma lista, ele é convertido em uma lista
-            if not type(flex_regions) == list:  # noqa: E721
-                flex_regions = list(flex_regions.geoms)
+                # Se "flex_regions" não for uma lista, ele é convertido em uma lista
+                if not type(flex_regions[i]) == list:  # noqa: E721
+                    flex_regions[i] = list(flex_regions[i].geoms)
 
             if i == 0:  # skirt
                 for path in skirt.perimeter_paths.geoms:
@@ -168,15 +178,15 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
             # ------ FIM DO PRE-PROCESSAMENTO DO PERIMETER_PATH -------
             for path in split_by_regions(layer.perimeter_paths, flex_regions).geoms:
                 flex_path = False
-
-                for region in flex_regions:  # para a região flexível
-                    if path.within(region.buffer(0.01, join_style=2)):
-                        flex_path = line_flex_region(path)
-                        # flex_path, retract_path = retract(path, self.process.retract_ratio)  # noqa: E501
-                        layer.perimeter.append(Raster(flex_path, self.process.flex_flow, self.process.flex_speed))  # noqa: E501
-                        # layer.perimeter.append(Raster(retract_path, self.process.retract_flow, self.process.retract_speed))  # noqa: E501
-                        flex_path = True
-                        break
+                for i in range(len(flex_regions)):
+                    for region in flex_regions[i]:  # para a região flexível
+                        if path.within(region.buffer(0.01, join_style=2)):
+                            flex_path = line_flex_region(path)
+                            # flex_path, retract_path = retract(path, self.process.retract_ratio)  # noqa: E501
+                            layer.perimeter.append(Raster(flex_path, self.process.flex_flow, self.process.flex_speed))  # noqa: E501
+                            # layer.perimeter.append(Raster(retract_path, self.process.retract_flow, self.process.retract_speed))  # noqa: E501
+                            flex_path = True
+                            break
 
                 if not flex_path:  # para a região normal
                     if i == 0:  # para a primeira camada
@@ -206,21 +216,24 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
             for path in infill_paths.geoms:
                 flex_path = False
 
-                for region in flex_regions_gapped.geoms:  # para a região flexível
+                for i in range(len(flex_regions_gapped)):
+                    # para a região flexível
+                    for region in flex_regions_gapped[i].geoms:
 
-                    # se o caminho estiver na região flexivel
-                    if path.within(region.buffer(0.01, join_style=2)):
-                        flex_path = line_flex_region(path)
-                        # flex_path, retract_path = retract(path, self.process.retract_ratio)  # noqa: E501
-                        layer.infill.append(Raster(flex_path, self.process.flex_flow, self.process.flex_speed))  # noqa: E501
-                        # layer.infill.append(Raster(retract_path, self.process.retract_flow, self.process.retract_speed))  # noqa: E501
-                        flex_path = True
-                        break
+                        # se o caminho estiver na região flexivel
+                        if path.within(region.buffer(0.01, join_style=2)):
+                            flex_path = line_flex_region(path)
+                            # flex_path, retract_path = retract(path, self.process.retract_ratio)  # noqa: E501
+                            layer.infill.append(Raster(flex_path, self.process.flex_flow, self.process.flex_speed))  # noqa: E501
+                            # layer.infill.append(Raster(retract_path, self.process.retract_flow, self.process.retract_speed))  # noqa: E501
+                            flex_path = True
+                            break
 
-                    else:  # its gap
-                        for flex in flex_regions:
-                            if path.within(flex.buffer(0.02, join_style=2)):
-                                flex_path = True
+                        else:  # its gap
+                            for j in range(len(flex_regions)):
+                                for flex in flex_regions[j]:
+                                    if path.within(flex.buffer(0.02, join_style=2)):
+                                        flex_path = True
 
                 if not flex_path:  # para a região normal
                     if i == 0:  # para a primeira camada

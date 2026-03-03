@@ -1,9 +1,9 @@
 
 
-from Altprint.flex_continuous_copy import FlexProcess, FlexPrint
+from Altprint.flex_c_test_multigap import FlexProcess, FlexPrint
 
 
-process = FlexProcess(settings_file="slicing/parameters/dev_flex_parameters.yml")
+process = FlexProcess(settings_file="slicing/parameters/flex_parameters.yml")
 part = FlexPrint(process)
 
 
