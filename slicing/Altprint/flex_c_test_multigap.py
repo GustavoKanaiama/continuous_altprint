@@ -11,6 +11,8 @@ from Altprint.settingsparser import SettingsParser
 
 from Altprint.horizontal_gaps import create_gaps
 
+import sys
+
 # from Altprint.best_path import *
 
 
@@ -19,40 +21,8 @@ class FlexProcess():  # definição da classe responsável por controlar os par�
     def __init__(self, **kwargs):
         # dicionário criado que contém os valores padrão para vários parâmetros que serão usadas no processo de impressão
         prop_defaults = {
-            "model_file": "",
-            "flex_model_file": "",
-            "height_layer": 0.2,
             "infill_method": RectilinearInfill,
-            "infill_angle": 0,
-            "offset": (0, 0, 0),
-            "external_adjust": 0.5,
-            "perimeter_num": 1,
-            "perimeter_gap": 0.5,
-            "raster_gap": 0.5,
-            "overlap": 0.0,
-            "skirt_distance": 10,
-            "skirt_num": 3,
-            "skirt_gap": 0.5,
-            "travel_speed": 12000,
-            "retraction": -0.5,
-            "first_layer_flow": 2,
-            "flow": 1.2,
-            "speed": 2400,
-            "flex_flow": 0,
-            "flex_speed": 2000,
-            "num_flex_regions": 1,
-            # "retract_flow": 2,
-            # "retract_speed": 1200,
-            # "retract_ratio": 0.9,
             "gcode_exporter": GcodeExporter,
-            "start_script": "",
-            "end_script": "",
-            "horizontal_gap_flex_infill": False,
-            "horizontal_num_gap": 1,
-            "horizontal_perc_gap": 0.5,
-            "orientation_gap": False,
-            "best_path": True,
-            "verbose": True,
         }
         # loop que percorre todos os itens do dicionário "prop_defaults". Para cada item, ele usa a função "setattr" para definir um atributo na instância atual com o nome "prop" e o valor correspondente de kwargs se ele existir, caso contrário, ele usa o valor padrão default.
         for (prop, default) in prop_defaults.items():
@@ -108,6 +78,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                 self.flex_planes.append(slicer.slice_model(self.heights))
         else:
             print("a quantidade de regiões flexiviveis fornecidads é incoerente com o numero de regioes flexiveis informado")
+            sys.exit(0)
 
     def make_layers(self):  # método que gera as trajetórias das camadas, desde a saia inicial, e o perímetro/contorno e o preenchimento de cada camada
         if self.process.verbose is True:  # linha de verificação fornecida dentro das configurações do próprio arquivo yml
@@ -150,24 +121,31 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
 
             flex_regions = []
             flex_regions_gapped = []
-            for i in range(self.process.num_flex_regions):
+            for region in range(self.process.num_flex_regions):
                 # define a região flexível na camada atual baseado nos planos que compêm cada camada desta região já definida na função "slice"
-                flex_regions.append(self.flex_planes[i].planes[height])
+                flex_regions.append(
+                    self.flex_planes[region].planes[height])
 
                 # em caso de "True" define a região flexível com gaps
-                if (self.process.horizontal_gap_flex_infill and self.process.horizontal_perc_gap[i] > 0):
-                    flex_regions_gapped.append(create_gaps(flex_regions[i],
-                                                           self.process.horizontal_num_gap[i],
-                                                           self.process.horizontal_perc_gap[i],
+                if (self.process.horizontal_gap_flex_infill and (self.process.horizontal_perc_gap[region] > 0) and (self.process.horizontal_num_gap[region] > 0)):
+                    flex_regions_gapped.append(create_gaps(flex_regions[region],
+                                                           self.process.horizontal_num_gap[region],
+                                                           self.process.horizontal_perc_gap[region],
                                                            self.process.orientation_gap))
 
                 # em caso de "False", não existe gap, apenas as regiões flexíveis
+                elif (not (self.process.horizontal_gap_flex_infill) or (self.process.horizontal_perc_gap[region] == 0) or (self.process.horizontal_num_gap[region] == 0)):
+                    flex_regions_gapped.append(flex_regions[region])
+
                 else:
-                    flex_regions_gapped.append(flex_regions[i])
+                    print(
+                        "Você está tentando inserir um número de regiões flex negativo e/ou uma porcentagem de gap negativa")
+                    sys.exit(0)
 
                 # Se "flex_regions" não for uma lista, ele é convertido em uma lista
-                if not type(flex_regions[i]) == list:  # noqa: E721
-                    flex_regions[i] = list(flex_regions[i].geoms)
+                if not type(flex_regions[region]) == list:  # noqa: E721
+                    flex_regions[region] = list(
+                        flex_regions[region].geoms)
 
             if i == 0:  # skirt
                 for path in skirt.perimeter_paths.geoms:
