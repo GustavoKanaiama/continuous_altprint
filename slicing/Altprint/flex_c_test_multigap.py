@@ -93,6 +93,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
                       self.process.skirt_num,
                       self.process.skirt_gap,
                       - self.process.skirt_distance - self.process.skirt_gap * self.process.skirt_num,  # noqa: E501
+                      - self.process.skirt_distance - self.process.skirt_gap * self.process.skirt_num,
                       self.process.overlap,
                       flex_print_instance=self)
         # utiliza o método da classe "Layer" para criação do perímetro formado pela saia
@@ -104,7 +105,8 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
             # para cada altura, é criado um novo objeto "Layer", que recebe os parãmetros referentes ao perímetro fornecidos pelo arquivo yml, e atribuído a "layer" que é referente a cada camada
             layer = ContinuousLayer(self.sliced_planes.planes[height],
                                     self.process.perimeter_num,
-                                    self.process.perimeter_gap,
+                                    self.process.perimeter_to_perimeter_gap,
+                                    self.process.perimeter_to_infill_gap,
                                     self.process.external_adjust,
                                     self.process.overlap,
                                     flex_print_instance=self)

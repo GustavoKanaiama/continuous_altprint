@@ -40,12 +40,14 @@ class Raster:  # Esta classe representa um caminho raster na impressão
 class Layer:  # class represents a layer in a 3D printing process
     """Layer Object that stores layer internal and external shapes, also perimeters and infill path"""  # noqa: E501
 
-    def __init__(self, shape: MultiPolygon, perimeter_num, perimeter_gap, external_adjust, overlap):  # method that initializes the layer # noqa: E501
+    def __init__(self, shape: MultiPolygon, perimeter_num, perimeter_to_perimeter_gap, perimeter_to_infill_gap, external_adjust, overlap):  # method that initializes the layer # noqa: E501
         # A MultiPolygon representing the layer’s shape (both internal and external)
         self.shape = shape
         self.perimeter_num = perimeter_num  # The number of perimeters for this layer
         # A parameter related to the spacing between perimeters
-        self.perimeter_gap = perimeter_gap
+        self.perimeter_to_perimeter_gap = perimeter_to_perimeter_gap
+
+        self.perimeter_to_infill_gap = perimeter_to_infill_gap
         # An adjustment factor specific to external shapes
         self.external_adjust = external_adjust
         # A value indicating how much overlap there is between adjacent perimeters
@@ -64,7 +66,7 @@ class Layer:  # class represents a layer in a 3D printing process
         # the loop iterates through each section (geometry) within the layer’s shape (which is a MultiPolygon)
         for section in self.shape.geoms:
             for i in range(self.perimeter_num):  # the loop iterates number of perimeters
-                eroded_shape = section.buffer(- self.perimeter_gap*(i)
+                eroded_shape = section.buffer(- self.perimeter_to_perimeter_gap*(i)
                                               - self.external_adjust/2, join_style=2)  # Calculates an “eroded shape” by buffering the section with a negative distance
                 # The negative distance is determined by subtracting the product of self.perimeter_gap * i and self.external_adjust / 2. The join_style=2 argument specifies how the buffer should handle intersections
 
@@ -96,7 +98,7 @@ class Layer:  # class represents a layer in a 3D printing process
         infill_border_geoms = []
         # the loop iterates through each section (geometry) within the layer’s shape (which is a MultiPolygon)
         for section in self.shape.geoms:
-            eroded_shape = section.buffer(- self.perimeter_gap
+            eroded_shape = section.buffer(- self.perimeter_to_infill_gap
                                           * self.perimeter_num
                                           - self.external_adjust/2
                                           + self.overlap, join_style=2)  # Calculates an “eroded shape” by buffering the section with a negative distance
@@ -115,9 +117,10 @@ class Layer:  # class represents a layer in a 3D printing process
 class ContinuousLayer(Layer):
     """Enhanced Layer class generating continuous paths for perimeter and infill"""
 
-    def __init__(self, shape: MultiPolygon, perimeter_num, perimeter_gap, external_adjust, overlap, flex_print_instance):
+    def __init__(self, shape: MultiPolygon, perimeter_num, perimeter_to_perimeter_gap, perimeter_to_infill_gap, external_adjust, overlap, flex_print_instance):
 
-        super().__init__(shape, perimeter_num, perimeter_gap, external_adjust, overlap)
+        super().__init__(shape, perimeter_num, perimeter_to_perimeter_gap,
+                         perimeter_to_infill_gap, external_adjust, overlap)
         self.continuous_perimeter_paths: List[LineString] = []
         self.continuous_infill_paths: List[LineString] = []
         self.flex_print_ref = flex_print_instance
@@ -129,7 +132,7 @@ class ContinuousLayer(Layer):
 
         for section in self.shape.geoms:
             for i in range(self.perimeter_num):
-                eroded_shape = section.buffer(- self.perimeter_gap*(i)
+                eroded_shape = section.buffer(- self.perimeter_to_perimeter_gap*(i)
                                               - self.external_adjust/2, join_style=2)
 
                 if eroded_shape.is_empty:
@@ -178,7 +181,7 @@ class ContinuousLayer(Layer):
         infill_border_geoms = []
         # the loop iterates through each section (geometry) within the layer’s shape (which is a MultiPolygon)
         for section in self.shape.geoms:
-            eroded_shape = section.buffer(- self.perimeter_gap
+            eroded_shape = section.buffer(- self.perimeter_to_infill_gap
                                           * self.perimeter_num
                                           - self.external_adjust/2
                                           + self.overlap, join_style=2)  # Calculates an “eroded shape” by buffering the section with a negative distance
