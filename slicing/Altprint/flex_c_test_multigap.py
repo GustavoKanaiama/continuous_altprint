@@ -57,7 +57,7 @@ class FlexPrint(BasePrint):  # definição da classe responsável por implementa
         if self.process.verbose is True:
             print("slicing {} ...".format(self.process.model_file))
         # atribui as configurações dos parâmetros de impressão como um objeto da classe STLSlicer
-        slicer = STLSlicer(StandartHeightMethod(self.process.height_layer))
+        slicer = STLSlicer(StandartHeightMethod(self.process.layer_height))
         # método dentro da Classe STLSlicer que lê o arquivo do objeto 3D referente a região normal (em stl) determinado no arquivo yml
         slicer.load_model(self.process.model_file)
         # método dentro da Classe STLSlicer que translada o objeto no plano 3D para um offset determinado no arquivo yml
