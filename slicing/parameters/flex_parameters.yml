@@ -1,4 +1,5 @@
 model_file: slicing/stl/S_ciclo_henrique/s_ciclo_H.stl #arquivo da peça desejada
+num_flex_regions: 1
 flex_model_file: [slicing/stl/S_ciclo_henrique/s_ciclo_H_flex.stl] #arquivo da "peça" que representa a região flexível na peça original
 start_script: slicing/gcode/start_k1c.gcode #arquivo cabeçalho de inicio da impressora
 end_script: slicing/gcode/end_k1c.gcode #arquivo cabeçalho de fim da impressora
@@ -6,29 +7,25 @@ infill_angle: [180] #angulo de preenchimento
 infill_gap: 0.5 #prenchimento de lacuna
 offset: [95, 75, 0] #ponto zero da mesa
 external_adjust: 0.5 #ajuste dimensional, eh um offset que ele da nas laterais
-raster_gap: 0.8
+raster_gap: 0.5
 perimeter_num: 2 #numero de perimetros
 perimeter_to_perimeter_gap: 0.5 #gap entre os perimetros e o perimetro mais interno e o infill
-perimeter_to_infill_gap: 0.37 #0.37
+perimeter_to_infill_gap: 0.35 #0.37
 skirt_distance: 8 #distância da saia
 skirt_num: 1 #numero de perimetros da saia
 skirt_gap: 0.6 #largura da lacuna entre os contornos da saia
 overlap: 0.0 #sobreposição
 layer_height: 0.2
 travel_speed: 12000
-retraction: -0.2 #valor de retração do filemento no bico durante movimentos de deslocamento
+retraction: 0 #valor de retração do filemento no bico durante movimentos de deslocamento
 first_layer_flow: 0.9 #fluxo na primeira camada********
 flow: 0.9 #fluxo na região padrão da peça*********
 speed: 3600 #velocidade na região padrão da peça
 flex_flow: 0.6 #fluxo na região flexivel da peça*******
 flex_speed: 3600 #velocidade na região flexivel da peça**********
-#retract_flow: 0.8 #fluxo na região de recuperação da peça**********
-#retract_speed: 4600 #velocidade na região de recuperação da peça*******
-#retract_ratio: 0.9 #razao que determina a proporcao entre regiao flexivel e regiao de recuperacao, ex: 0.9 pra uma regiao de 10mm -> 9mm de regiao flexivel 1mm de recuperacao
 horizontal_gap_flex_infill: False #cria "vãos" (gaps) horizontais em formtos retangulares na zona flexível
 horizontal_num_gap: [4] #quantidade de gaps
 horizontal_perc_gap: [0.6] #porcentagem da área vazia em relação à área total da zona flexível
 orientation_gap: False #orientação de construção dos gaps: se os feixes da região flexivel estão no sentido horizontal, é False, se tiverem na vertical, é True
 best_path: True #ativar o algoritmo de melhor caminho
-"num_flex_regions": 1
 verbose: True
