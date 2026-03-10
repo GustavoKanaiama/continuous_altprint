@@ -27,6 +27,7 @@ horizontal_gap_flex_infill: False
 horizontal_num_gap: [4] 
 horizontal_perc_gap: [0.6] 
 orientation_gap: False 
+best_path: True
 threshold_walk_around: 1
 apply_walk_around: True
 verbose: True
