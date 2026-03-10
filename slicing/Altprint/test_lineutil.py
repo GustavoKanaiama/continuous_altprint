@@ -5,17 +5,12 @@ from shapely.geometry import LineString, MultiLineString
 
 
 def line_flex_region(path):
-    # def retract(path, ratio):  # This function takes two arguments: path (a LineString) and ratio (a float)
+
     x, y = path.xy  # Extract the x and y coordinates from the path
     # Define points A and B as the start and end points of the path
     A = (x[0], y[0])
     B = (x[-1], y[-1])
-    # Calculate point C that lies on the same line segment but at a specific fraction (given by ratio) of the distance from A to B
-    # C = (A[0] + ratio*(B[0]-A[0]), A[1] + ratio*(B[1]-A[1]))
-    # Create two LineStrings: flex_path from A to C, and retract_path from C to B
-    # flex_path = LineString([A, C])
-    # retract_path = LineString([C, B])
-    # return flex_path, retract_path  # Return both LineStrings
+    # return flex_path as LineString
     flex_path = LineString([A, B])
     return flex_path
 
