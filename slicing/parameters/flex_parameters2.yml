@@ -1,7 +1,7 @@
-model_file: slicing/stl/S_ciclo_henrique/s_ciclo_H.stl 
-flex_model_file: slicing/stl/S_ciclo_henrique/s_ciclo_H_flex.stl 
-start_script: slicing/gcode/start_prusaMK3S.gcode 
-end_script: slicing/gcode/end_prusaMK3S.gcode 
+model_file: bar.stl 
+flex_model_file: flex.stl 
+start_script: scripts/start.gcode
+end_script: scripts/end.gcode
 infill_angle: [180] 
 infill_gap: 0.5 
 offset: [100, 75, 0] 
