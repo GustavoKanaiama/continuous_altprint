@@ -12,8 +12,6 @@ skirt_distance: 10 #distância da saia
 skirt_num: 3 #numero de perimetros da saia
 skirt_gap: 0.6 #largura da lacuna entre os contornos da saia
 overlap: 0.0 #sobreposição
-travel_speed: 12000
-retraction: -0.2 #valor de retração do filemento no bico durante movimentos de deslocamento
 first_layer_flow: 1 #fluxo na primeira camada********
 flow: 1 #fluxo na região padrão da peça*********
 speed: 2400 #velocidade na região padrão da peça
@@ -26,6 +24,5 @@ vertical_gap_flex_infill: False #alterna entre printar uma região flexível (fl
 horizontal_gap_flex_infill: True #cria "vãos" (gaps) horizontais em formtos retangulares na zona flexível
 horizontal_num_gap: 3 #quantidade de gaps
 horizontal_perc_gap: 0.31 #porcentagem da área vazia em relação à área total da zona flexível
-orientation_gap: False #orientação de construção dos gaps: se os feixes da região flexivel estão no sentido horizontal, é False, se tiverem na vertical, é True
 best_path: True #ativar o algoritmo de melhor caminho
 verbose: True
