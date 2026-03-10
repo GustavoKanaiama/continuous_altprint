@@ -1,8 +1,8 @@
-model_file: slicing/stl/S_ciclo_henrique/s_ciclo_H.stl 
+model_file: bar.stl 
 num_flex_regions: 1
-flex_model_file: [slicing/stl/S_ciclo_henrique/s_ciclo_H_flex.stl] 
-start_script: slicing/gcode/start_k1c.gcode 
-end_script: slicing/gcode/end_k1c.gcode 
+flex_model_file: [flex.stl] 
+start_script: scripts/start.gcode
+end_script: scripts/end.gcode
 infill_angle: [180] 
 infill_gap: 0.5 
 offset: [95, 75, 0] 
